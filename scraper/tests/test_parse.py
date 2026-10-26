@@ -95,3 +95,32 @@ class ParseSyntheticDevice(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class DerivedFields(unittest.TestCase):
+    def setUp(self):
+        html = FIXTURE.read_text(encoding="utf-8")
+        self.n = parse_device_html(html, "https://example.invalid/x-1.php", brand="Acme").normalized
+
+    def test_filter_fields(self):
+        self.assertEqual(self.n["display"]["panel_tech"], "OLED")
+        self.assertNotIn("brand", self.n["soc"])  # "Acme Silicon" is not a known SoC brand, so left unset
+        self.assertEqual(self.n["software"]["os_family"], "Android")
+        self.assertFalse(self.n["memory"]["expandable"])
+        self.assertTrue(self.n["audio"]["stereo_speakers"])
+        self.assertNotIn("headphone_jack", self.n["audio"])  # not stated in the synthetic page
+        self.assertNotIn("five_g", self.n["connectivity"])  # no Network table in the synthetic page
+
+    def test_soc_brand_mapping(self):
+        from parse import soc_brand
+        self.assertEqual(soc_brand("Snapdragon 8 Gen 3"), "Snapdragon")
+        self.assertEqual(soc_brand("MediaTek Dimensity 9300"), "Dimensity")
+        self.assertEqual(soc_brand("Apple A17 Pro (3 nm)"), "Apple")
+        self.assertEqual(soc_brand("Google Tensor G3"), "Tensor")
+        self.assertIsNone(soc_brand("Mystery chip"))
+
+    def test_panel_mapping(self):
+        from parse import panel_tech
+        self.assertEqual(panel_tech("IPS LCD, 120Hz"), "LCD")
+        self.assertEqual(panel_tech("Dynamic AMOLED 2X, 120Hz"), "OLED")
+        self.assertIsNone(panel_tech(""))

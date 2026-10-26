@@ -38,9 +38,11 @@ export interface Device {
     peak_nits?: number;        // HDR / peak full-screen
     outdoor_nits?: number;     // HBM / sunlight peak where published
     glass?: string;
+    panel_tech?: 'OLED' | 'LCD';
   };
 
   soc: {
+    brand?: string;            // Snapdragon, Dimensity, Apple, Exynos, Tensor, ...
     chipset?: string;
     process_nm?: number;
     cpu?: string;
@@ -56,8 +58,13 @@ export interface Device {
     front?: CameraSpec;
   };
 
+  memory?: {
+    expandable?: boolean;      // microSD slot
+  };
+
   audio: {
     stereo_speakers?: boolean;
+    headphone_jack?: boolean;
     haptics?: string;
   };
 
@@ -68,6 +75,7 @@ export interface Device {
     nfc?: boolean;
     uwb?: boolean;
     ir_blaster?: boolean;
+    five_g?: boolean;
   };
 
   battery: {
@@ -81,6 +89,7 @@ export interface Device {
 
   software: {
     launch_os?: string;
+    os_family?: 'Android' | 'iOS';
     os_updates_years?: number;
     security_updates_years?: number;
     bootloader_unlockable?: boolean;
@@ -95,6 +104,8 @@ export interface Device {
 
   /** Where the record came from (set by the archiver). */
   source_url?: string;
+  /** Main product photo, relative to the catalog folder (e.g. img/123.webp). */
+  image?: string;
   /** Free-form provenance note, shown in the device header. */
   source_note?: string;
 }

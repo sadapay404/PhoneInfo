@@ -3,7 +3,7 @@
 // plus a manifest into public/catalog/. The app syncs these files; the service
 // worker prefetches them in the background.
 import { createHash } from 'node:crypto';
-import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import LZ from 'lz-string';
@@ -49,6 +49,10 @@ devices.sort((a, b) => a.id.localeCompare(b.id));
 
 rmSync(OUT, { recursive: true, force: true });
 mkdirSync(OUT, { recursive: true });
+
+// Photos exported by the archiver sit next to the devices file (data/export/img/).
+const IMG_SRC = join(dirname(SOURCE), 'img');
+if (existsSync(IMG_SRC)) cpSync(IMG_SRC, join(OUT, 'img'), { recursive: true });
 
 const chunks = [];
 for (let i = 0; i * CHUNK_SIZE < devices.length; i++) {

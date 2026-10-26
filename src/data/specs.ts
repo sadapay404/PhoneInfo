@@ -17,14 +17,17 @@ export const SPEC_FIELDS: SpecField[] = [
   { path: 'display.peak_nits', label: 'Peak brightness', category: 'Display', unit: 'nits', better: 'higher', format: num(' nits') },
   { path: 'display.outdoor_nits', label: 'Outdoor brightness', category: 'Display', unit: 'nits', better: 'higher', format: num(' nits') },
   { path: 'display.glass', label: 'Cover glass', category: 'Display' },
+  { path: 'display.panel_tech', label: 'Panel technology', category: 'Display' },
 
   // SoC & Memory
   { path: 'soc.chipset', label: 'Chipset', category: 'SoC & Memory' },
+  { path: 'soc.brand', label: 'SoC brand', category: 'SoC & Memory' },
   { path: 'soc.process_nm', label: 'Process node', category: 'SoC & Memory', unit: 'nm', better: 'lower', format: num(' nm') },
   { path: 'soc.cpu', label: 'CPU layout', category: 'SoC & Memory' },
   { path: 'soc.gpu', label: 'GPU', category: 'SoC & Memory' },
   { path: 'soc.ram_gb', label: 'RAM', category: 'SoC & Memory', unit: 'GB', better: 'higher', format: num(' GB') },
   { path: 'soc.storage_gb', label: 'Storage options', category: 'SoC & Memory', format: (v) => (Array.isArray(v) ? v.map((s) => `${s}GB`).join(' · ') : '—') },
+  { path: 'memory.expandable', label: 'microSD slot', category: 'SoC & Memory', format: yesNo },
 
   // Cameras
   { path: 'camera.main.mp', label: 'Main', category: 'Cameras', unit: 'MP', better: 'higher', format: num(' MP') },
@@ -39,12 +42,14 @@ export const SPEC_FIELDS: SpecField[] = [
 
   // Audio & Haptics
   { path: 'audio.stereo_speakers', label: 'Stereo speakers', category: 'Audio & Haptics', format: yesNo },
+  { path: 'audio.headphone_jack', label: '3.5 mm jack', category: 'Audio & Haptics', format: yesNo },
   { path: 'audio.haptics', label: 'Haptic motor', category: 'Audio & Haptics' },
 
   // Connectivity
   { path: 'connectivity.wifi', label: 'Wi-Fi', category: 'Connectivity' },
   { path: 'connectivity.bluetooth', label: 'Bluetooth', category: 'Connectivity' },
   { path: 'connectivity.codecs', label: 'Bluetooth codecs', category: 'Connectivity', format: (v) => (Array.isArray(v) ? v.join(', ') : '—') },
+  { path: 'connectivity.five_g', label: '5G', category: 'Connectivity', format: yesNo },
   { path: 'connectivity.nfc', label: 'NFC', category: 'Connectivity', format: yesNo },
   { path: 'connectivity.uwb', label: 'UWB', category: 'Connectivity', format: yesNo },
   { path: 'connectivity.ir_blaster', label: 'IR blaster', category: 'Connectivity', format: yesNo },
@@ -59,6 +64,7 @@ export const SPEC_FIELDS: SpecField[] = [
 
   // Software
   { path: 'software.launch_os', label: 'Launch OS', category: 'Software' },
+  { path: 'software.os_family', label: 'OS family', category: 'Software' },
   { path: 'software.os_updates_years', label: 'OS updates', category: 'Software', unit: 'years', better: 'higher', format: num(' years') },
   { path: 'software.security_updates_years', label: 'Security updates', category: 'Software', unit: 'years', better: 'higher', format: num(' years') },
   { path: 'software.bootloader_unlockable', label: 'Bootloader unlockable', category: 'Software', format: yesNo },

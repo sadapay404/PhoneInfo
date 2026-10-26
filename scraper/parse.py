@@ -139,6 +139,7 @@ def normalize(p: ParsedDevice, brand: str | None) -> dict[str, Any]:
     dtype = g("Display", "Type") or ""
     if dtype:
         _set(display, "type", dtype.split(",")[0].strip())
+        display["panel_tech"] = panel_tech(dtype)
     size = _first(r"([\d.]+)\s*inches", g("Display", "Size"))
     if size:
         display["size_in"] = float(size.group(1))
@@ -167,6 +168,7 @@ def normalize(p: ParsedDevice, brand: str | None) -> dict[str, Any]:
     soc: dict[str, Any] = {}
     chipset = g("Platform", "Chipset")
     if chipset:
+        _set(soc, "brand", soc_brand(chipset))
         nm = _first(r"(\d+)\s*nm", chipset)
         if nm:
             soc["process_nm"] = int(nm.group(1))
@@ -215,8 +217,16 @@ def normalize(p: ParsedDevice, brand: str | None) -> dict[str, Any]:
     loud = g("Sound", "Loudspeaker") or ""
     if loud:
         audio["stereo_speakers"] = bool(re.search(r"stereo", loud, re.I))
+    jack = g("Sound", "3.5mm jack")
+    if jack:
+        audio["headphone_jack"] = jack.strip().lower().startswith("yes")
     if audio:
         out["audio"] = audio
+
+    # --- Memory card slot ---
+    card = g("Memory", "Card slot")
+    if card:
+        out["memory"] = {"expandable": card.strip().lower().startswith("yes") or "microsd" in card.lower()}
 
     # --- Connectivity ---
     conn: dict[str, Any] = {}
@@ -234,6 +244,11 @@ def normalize(p: ParsedDevice, brand: str | None) -> dict[str, Any]:
     features = p.all_values()
     if re.search(r"ultra\s*wideband|\bUWB\b", features, re.I):
         conn["uwb"] = True
+    tech = g("Network", "Technology") or ""
+    if g("Network", "5G bands") or "5G" in tech:
+        conn["five_g"] = True
+    elif tech:
+        conn["five_g"] = False
     if re.search(r"infrared|ir blaster", features, re.I):
         conn["ir_blaster"] = True
     if conn:
@@ -268,7 +283,9 @@ def normalize(p: ParsedDevice, brand: str | None) -> dict[str, Any]:
     # --- Software ---
     os_text = g("Platform", "OS")
     if os_text:
-        out["software"] = {"launch_os": os_text.split(",")[0].strip()}
+        launch = os_text.split(",")[0].strip()
+        family = "iOS" if launch.lower().startswith("ios") else "Android" if "android" in launch.lower() else None
+        out["software"] = {"launch_os": launch, **({"os_family": family} if family else {})}
 
     # --- Repair / SAR (values are W/kg) ---
     repair: dict[str, Any] = {}
@@ -289,6 +306,34 @@ def normalize(p: ParsedDevice, brand: str | None) -> dict[str, Any]:
     if brand:
         out["brand"] = brand
     return out
+
+
+_SOC_BRANDS = [
+    (r"snapdragon", "Snapdragon"),
+    (r"dimensity", "Dimensity"),
+    (r"exynos", "Exynos"),
+    (r"\bA\d{2}\b|apple a\d", "Apple"),
+    (r"tensor", "Tensor"),
+    (r"kirin", "Kirin"),
+    (r"helio", "Helio"),
+    (r"unisoc|tiger", "Unisoc"),
+    (r"bionic", "Apple"),
+]
+
+
+def soc_brand(chipset: str) -> str | None:
+    for pattern, name in _SOC_BRANDS:
+        if re.search(pattern, chipset, re.I):
+            return name
+    return None
+
+
+def panel_tech(display_type: str) -> str | None:
+    if re.search(r"oled", display_type, re.I):
+        return "OLED"
+    if re.search(r"\bLCD\b|IPS|TFT|LTPS", display_type, re.I):
+        return "LCD"
+    return None
 
 
 def _wifi_generation(wlan: str) -> str | None:
@@ -351,3 +396,15 @@ def parse_device_html(html: str, url: str, brand: str | None = None) -> ParsedDe
     _set(normalized, "model", model)
     parsed.normalized = normalized
     return parsed
+
+
+def find_image_url(html: str, page_url: str) -> str | None:
+    """The main product photo on a device page, if the page has one."""
+    from urllib.parse import urljoin
+
+    soup = BeautifulSoup(html, "html.parser")
+    img = soup.select_one(".specs-photo-main img") or soup.select_one('img[src*="/vv/bigpic/"]')
+    if img and img.get("src"):
+        return urljoin(page_url, img["src"])
+    og = soup.find("meta", attrs={"property": "og:image"})
+    return urljoin(page_url, og["content"]) if og and og.get("content") else None

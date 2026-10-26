@@ -1,100 +1,97 @@
-# AetherPhone DB
+# AetherPhone
 
-An offline-first phone encyclopedia. It has a typed device schema, instant fuzzy search,
-boxed spec sheets, a compare matrix with per-category winners, and a few analysis tools.
-It works on any screen size: a sidebar on desktop, a bottom tab bar on phones.
+A phone finder with a database of specs and photos. Filter by hundreds of attributes,
+compare up to four phones, and browse the full spec sheet. Everything runs offline once
+the catalog has synced.
 
 ## Run it
 
 ```bash
 npm install
-npm run dev          # http://localhost:3000
+npm run dev          # http://localhost:3000 (regenerates the catalog first)
+npm test             # filter engine, estimators, catalog pipeline, UI smoke tests
 npm run build        # regenerates the catalog, type-checks, builds to dist/
 npm run preview      # serve the production build (service worker enabled here)
-npm test             # Vitest: estimators, compare logic, search, catalog pipeline, app smoke tests
 ```
 
-To simulate a phone, use your browser's device mode. The layout adapts with no frame.
+On a phone, or in your browser's device mode, the layout switches to a bottom tab bar and
+a filter sheet. There is no phone frame.
+
+## What you get
+
+- **PhoneFinder** (`#/finder`): search (typo-tolerant), 20+ filter groups, quick presets
+  ("Marathon battery", "Camera flagships", "One-hand size"…), sorting, and active-filter chips.
+  Filters live in the URL, so a filtered view can be bookmarked or shared.
+- **Phone pages** (`#/device/<id>`): photo, headline numbers, and every known spec in
+  categorized cards. Unknown fields are shown as unknown, never guessed.
+- **Compare** (`#/compare`): up to four phones, with a per-row winner, a "differences only"
+  filter, and adjustable category weights for the overall score.
+- **Tools**: battery endurance estimate, camera sensor size, and value per dollar.
 
 ## Architecture
 
 ```
-catalog/devices.json          source of truth (edit this)
-        │  npm run catalog:build  (validates, chunks, compresses, hashes)
+catalog/devices.json           hand-curated seed (4 devices, unverified: see notes)
+scraper/                       personal archive builder (GSMArena) → data/export/devices.json + photos
+        │  npm run catalog:build[:full]   validates, chunks, compresses, hashes
         ▼
-public/catalog/manifest.json  version + per-chunk SHA-256 + counts
-public/catalog/chunk-*.lz16   LZ-string (UTF-16) compressed, content-addressed chunks
+public/catalog/manifest.json   version + per-chunk SHA-256
+public/catalog/chunk-*.lz16    compressed, content-addressed device chunks
+public/catalog/img/*.webp      phone photos (generated; git-ignored)
         │
-        ├── app (useCatalog → syncCatalog): verify, decode, write to IndexedDB (Dexie)
-        └── service worker (Background Sync / Periodic Sync): prefetch chunks into cache
+        ├── app: syncs on every online open into IndexedDB (Dexie); works offline after that
+        └── service worker: Background Sync / Periodic Sync prefetch new chunks
 ```
 
-**Storage.** IndexedDB via Dexie holds the decompressed catalog. The app renders from it
-immediately on every visit, then syncs in the background when online. On the very first
-visit, before any sync, it uses the bundled copy in `catalog/devices.json`.
+- **Filtering** (`src/lib/finder.ts`) is a pure function over devices, fully unit-tested.
+  Unknown values fail a filter the user actually set (strict matching), so results never
+  quietly include phones that don't match.
+- **Search** uses Fuse.js in memory.
+- **Images** load lazily from the catalog folder. Phones without a photo get a neutral
+  brand-tinted placeholder.
 
-**Ingestion.** `syncCatalog()` compares the manifest version with the stored version.
-If they differ, it downloads only the changed chunks, verifies each checksum, and
-swaps the table in one transaction. A failed sync keeps the last good data and shows a banner.
+## Data sources: what is allowed
 
-**Background.** The service worker registers `sync` and `periodicsync` handlers for the
-`catalog-sync` tag. Chromium runs these when connectivity returns, or periodically for
-installed PWAs with permission. They prefetch the newest chunks into the cache, so a
-later offline visit works even if the page never synced.
+Only sources whose terms allow this use are crawled. Checked on each site's own terms
+pages, not from memory.
 
-**Search.** Fuse.js runs in memory over the local catalog, so it is typo-tolerant and offline.
+| Source | Status | Why |
+| --- | --- | --- |
+| GSMArena | Used for **personal** archive | Terms allow personal, non-commercial copies of documents and graphics. Not for redistribution. |
+| PhoneDB | **Licensed import only** | Sells database licenses through its contact form. Its free search is limited. Not crawled. |
+| NanoReview | **Not yet** | No terms page found (404). Ask before crawling. |
+| GizmoChina | **Excluded** | Terms prohibit copying, storing in a database, or archiving content. |
+| Manufacturer spec pages | Possible | Read individual pages, cite each value's source URL. |
 
-## Data provenance: read this
+For more sources, the route is licenses or permission, not crawling. The importer
+(`python scraper/crawl.py import --source licensed-phonedb --file dump.json`) merges any
+licensed dump with per-field priority. GSMArena wins conflicts, and a licensed source fills
+the gaps. Every field records its source.
 
-The seed entries were entered from memory of manufacturer spec sheets. **They are not
-verified against primary sources yet.** Each entry has a `source_note` saying so. Uncertain
-fields were left out, and the UI shows them as "unknown". Check values before relying on them.
-No benchmark scores are bundled. Enter your own in the Price vs performance tool.
+## Personal use only
 
-## Full catalog (personal archive)
+The archive, its photos, and anything built from them are for your own offline use.
+Keep them out of git and out of any public deployment. `data/` and `public/catalog/` are
+git-ignored for this reason. To publish or share, you need permission from the source sites.
 
-`scraper/` builds a private SQLite archive from GSMArena for personal offline use. Read
-`scraper/README.md` first: GSMArena's terms allow personal, non-commercial use only, so the
-archive and everything built from it stay private and out of git.
+## Data notes
 
-```bash
-python scraper/crawl.py fetch --limit 1000          # run in Cloud Shell, repeat until done
-python scraper/crawl.py export
-CATALOG_SOURCE=data/export/devices.json npm run catalog:build:full
-```
-
-## Adding devices by hand
-
-1. Add an object to `catalog/devices.json` (keep `id` a lowercase slug).
-2. Run `npm run catalog:build`. Validation errors stop the build with a clear message.
-3. Clients pick up the new version on their next sync.
-
-`public/catalog/` is generated and git-ignored. It is rebuilt by `npm run dev`, `test`, and `build`.
-
-## Still not built
-
-- **Hosting the full archive online.** The app can sync from its own origin, so the online
-  copy has to be served privately (for example Cloud Run behind Google sign-in). Do not
-  publish it while it contains GSMArena data.
-- **Benchmark radar** (Geekbench / AnTuTu / 3DMark against battery drain). Needs verified data.
-- **Richer schema** for per-band SAR, exact 5G/4G band and CA lists, throttling curves, and
-  iFixit/modularity scores. The type allows these fields, but no data is entered.
-- **Image pipeline** (WebP compression of device photos).
-- **Background Fetch** for large image downloads. Only the catalog data is prefetched so far.
-- **Device images.** The archive stores no photos yet.
+- The seed entries in `catalog/devices.json` were entered from memory and are not verified.
+- GSMArena's listed "Price" is not a reliable MSRP, so it is not used for price filters.
+  A price filter needs a licensed price source.
+- No benchmark scores are bundled. Enter your own in the value tool.
 
 ## Layout
 
 ```
-catalog/            devices.json (source of truth)
-scripts/            build-catalog.mjs (validate + chunk + manifest)
-public/             sw.js, manifest, icon, catalog/ (generated)
+catalog/            seed devices (hand-curated)
+scraper/            archive builder, parser, merge + import, tests
+scripts/            build-catalog.mjs (validate, chunk, copy photos)
+public/             sw.js, manifest, icon (catalog/ is generated)
 src/
+  lib/              finder.ts (filters, sort, URL state, presets), search.ts, compare.ts, estimators.ts
   data/             types.ts, specs.ts (field registry), seed.ts, db.ts (Dexie), catalogSync.ts
-scraper/            GSMArena archiver (personal use): crawl.py, parse.py, tests/ (synthetic fixture)
-  hooks/            useCatalog.ts (offline-first loading), useAppState.ts (routing, theme, compare)
-  lib/              search.ts (Fuse), compare.ts (winners + weights), estimators.ts (tools)
-  components/       Shell.tsx (responsive layout), Box.tsx, Icon.tsx
-  views/            Catalog.tsx, Compare.tsx, Tools.tsx
-  test/             setup.ts (fake IndexedDB, serves generated catalog to tests)
+  hooks/            useCatalog (offline-first loading), useAppState (routing, theme, compare)
+  components/       Shell, FilterPanel, DeviceImage, Box, Icon
+  views/            Finder, Detail, Compare, Tools
 ```

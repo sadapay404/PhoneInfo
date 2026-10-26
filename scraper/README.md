@@ -87,3 +87,29 @@ in `parse.py`, then run `export` again. (A `reparse` command is a sensible next 
 - GSMArena's listed "Price" is not a reliable MSRP, so it is not exported as `price_usd`.
 - Multi-variant devices (different RAM/storage bundles) are normalized to the first variant's
   values where the schema needs one value.
+
+## Photos
+
+`fetch` also downloads each phone's main photo (from the device page), converts it to WebP
+(640 px max side), and stores it in `data/images/`. Photos are spaced like pages. Pass
+`--no-images` to skip them. `export` copies them into `data/export/img/`, and the catalog
+build copies them into the app. This is a personal archive: keep it private.
+
+## Other sources (licensed or manual)
+
+Only merge data you are allowed to use. Write a JSON array of devices in the app schema
+(each entry needs `brand`, `model`, and `year`), then:
+
+```bash
+python scraper/crawl.py import --source licensed-phonedb --file dump.json
+python scraper/crawl.py export                       # merges by priority
+```
+
+Merge order defaults to `gsmarena, manufacturer, licensed`. Override it with
+`export --priority licensed,gsmarena`. For each field, the highest-priority source that has
+a value wins. A lower-priority source only fills gaps. Each field's source is recorded
+in the exported `source_note`.
+
+Sources checked (see the root README for the reasons): GSMArena (personal use), PhoneDB
+(licensed only), NanoReview (no terms found, not crawled), GizmoChina (terms prohibit copying
+and databases, excluded).

@@ -1,17 +1,23 @@
 import { useEffect, useState } from 'react';
 
-export type Tab = 'catalog' | 'compare' | 'tools';
+export type Tab = 'finder' | 'compare' | 'tools';
+export type View = Tab | 'device';
 export type Theme = 'dark' | 'light';
 
 export interface Route {
-  tab: Tab;
+  view: View;
   id: string | null;
+  query: string;
 }
 
+/** #/finder?x=y · #/device/<id> · #/compare · #/tools (legacy #/catalog maps to finder). */
 export function parseHash(hash: string): Route {
-  const [tab = 'catalog', id = null] = hash.replace(/^#\/?/, '').split('/');
-  const safe: Tab = tab === 'compare' || tab === 'tools' ? tab : 'catalog';
-  return { tab: safe, id: id ? decodeURIComponent(id) : null };
+  const [pathPart, query = ''] = hash.replace(/^#\/?/, '').split('?');
+  const [head = 'finder', id = null] = pathPart.split('/');
+  if (head === 'device' && id) return { view: 'device', id: decodeURIComponent(id), query };
+  if (head === 'compare') return { view: 'compare', id: null, query };
+  if (head === 'tools') return { view: 'tools', id: null, query };
+  return { view: 'finder', id: null, query };
 }
 
 export function useHashRoute(): Route {
@@ -55,20 +61,19 @@ export function useTheme(): [Theme, () => void] {
 const COMPARE_KEY = 'aetherphone.compare';
 export const MAX_COMPARE = 4;
 
+/** Compare selection persists across visits; ids that no longer exist are dropped. */
 export function useCompareSelection(validIds: Set<string>, defaults: string[]): [string[], (ids: string[]) => void] {
   const [ids, setIds] = useState<string[]>(() => {
     try {
       const saved = JSON.parse(localStorage.getItem(COMPARE_KEY) ?? 'null') as string[] | null;
       if (Array.isArray(saved)) return saved;
     } catch {
-      // ignore corrupt storage
+      // corrupt storage: fall back to defaults
     }
     return defaults;
   });
   useEffect(() => {
     localStorage.setItem(COMPARE_KEY, JSON.stringify(ids));
   }, [ids]);
-  // Drop ids that no longer exist in the catalog (e.g., after a catalog update).
-  const cleaned = ids.filter((id) => validIds.has(id));
-  return [cleaned, setIds];
+  return [ids.filter((id) => validIds.has(id)).slice(0, MAX_COMPARE), setIds];
 }
