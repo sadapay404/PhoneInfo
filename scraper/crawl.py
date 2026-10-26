@@ -52,7 +52,7 @@ IMAGE_DIR = DATA / "images"
 
 BASE = "https://www.gsmarena.com/"
 MAKERS_URL = urljoin(BASE, "makers.php3")
-BRAND_RE = re.compile(r"^([a-z0-9-]+)-phones-(\d+)\.php$")
+BRAND_RE = re.compile(r"^(.+?)-phones-(\d+)\.php$")  # brands like i_mate, at&t, benq_siemens
 
 # Politeness: never faster than this, plus jitter. GSMArena's robots.txt sets no
 # crawl-delay for '*', so we choose a conservative default ourselves.
@@ -225,6 +225,13 @@ def cmd_brands(conn: sqlite3.Connection, http: Polite, _args) -> None:
         found += 1
     conn.commit()
     print(f"brands: {found} listed (HTTP {status})")
+    if found == 0:
+        title = soup.title.get_text(strip=True) if soup.title else "(no title)"
+        links = len(soup.find_all("a", href=True))
+        print(f"  ! no brand links found. page title: {title!r}, links on page: {links}, "
+              f"response size: {len(html)} chars.", file=sys.stderr)
+        print("  ! If the title is not 'List of all mobile phone brands', GSMArena returned a "
+              "consent/challenge page. Open the URL in a browser, then retry later.", file=sys.stderr)
 
 
 def _brand_pages(soup: BeautifulSoup, slug: str, first_url: str) -> list[str]:
