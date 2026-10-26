@@ -9,7 +9,8 @@ import { fileURLToPath } from 'node:url';
 import LZ from 'lz-string';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
-const SOURCE = join(ROOT, 'catalog', 'devices.json');
+// Default: the curated seed. Set CATALOG_SOURCE=data/export/devices.json for the full archive.
+const SOURCE = process.env.CATALOG_SOURCE ? join(ROOT, process.env.CATALOG_SOURCE) : join(ROOT, 'catalog', 'devices.json');
 const OUT = join(ROOT, 'public', 'catalog');
 const CHUNK_SIZE = 50;
 const SCHEMA_VERSION = 1;
@@ -69,4 +70,4 @@ const manifest = {
   chunks,
 };
 writeFileSync(join(OUT, 'manifest.json'), JSON.stringify(manifest, null, 2) + '\n', 'utf8');
-console.log(`catalog ${version}: ${devices.length} devices in ${chunks.length} chunk(s)`);
+console.log(`catalog ${version}: ${devices.length} devices in ${chunks.length} chunk(s) from ${SOURCE.replace(ROOT + '/', '')}`);

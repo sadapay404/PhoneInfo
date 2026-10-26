@@ -51,22 +51,37 @@ verified against primary sources yet.** Each entry has a `source_note` saying so
 fields were left out, and the UI shows them as "unknown". Check values before relying on them.
 No benchmark scores are bundled. Enter your own in the Price vs performance tool.
 
-## Adding devices
+## Full catalog (personal archive)
+
+`scraper/` builds a private SQLite archive from GSMArena for personal offline use. Read
+`scraper/README.md` first: GSMArena's terms allow personal, non-commercial use only, so the
+archive and everything built from it stay private and out of git.
+
+```bash
+python scraper/crawl.py fetch --limit 1000          # run in Cloud Shell, repeat until done
+python scraper/crawl.py export
+CATALOG_SOURCE=data/export/devices.json npm run catalog:build:full
+```
+
+## Adding devices by hand
 
 1. Add an object to `catalog/devices.json` (keep `id` a lowercase slug).
 2. Run `npm run catalog:build`. Validation errors stop the build with a clear message.
-3. Commit `catalog/devices.json` and `public/catalog/`. Clients pick up the new version on their next sync.
+3. Clients pick up the new version on their next sync.
+
+`public/catalog/` is generated and git-ignored. It is rebuilt by `npm run dev`, `test`, and `build`.
 
 ## Still not built
 
-- **Catalog scale.** Ten thousand devices needs a permitted, verified data source plus
-  a review process. This repo has 4 devices. Scraping a third-party site should be
-  checked against its terms first.
+- **Hosting the full archive online.** The app can sync from its own origin, so the online
+  copy has to be served privately (for example Cloud Run behind Google sign-in). Do not
+  publish it while it contains GSMArena data.
 - **Benchmark radar** (Geekbench / AnTuTu / 3DMark against battery drain). Needs verified data.
 - **Richer schema** for per-band SAR, exact 5G/4G band and CA lists, throttling curves, and
   iFixit/modularity scores. The type allows these fields, but no data is entered.
 - **Image pipeline** (WebP compression of device photos).
 - **Background Fetch** for large image downloads. Only the catalog data is prefetched so far.
+- **Device images.** The archive stores no photos yet.
 
 ## Layout
 
@@ -76,6 +91,7 @@ scripts/            build-catalog.mjs (validate + chunk + manifest)
 public/             sw.js, manifest, icon, catalog/ (generated)
 src/
   data/             types.ts, specs.ts (field registry), seed.ts, db.ts (Dexie), catalogSync.ts
+scraper/            GSMArena archiver (personal use): crawl.py, parse.py, tests/ (synthetic fixture)
   hooks/            useCatalog.ts (offline-first loading), useAppState.ts (routing, theme, compare)
   lib/              search.ts (Fuse), compare.ts (winners + weights), estimators.ts (tools)
   components/       Shell.tsx (responsive layout), Box.tsx, Icon.tsx

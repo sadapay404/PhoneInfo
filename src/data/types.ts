@@ -93,6 +93,8 @@ export interface Device {
     sar_body_us_wkg?: number;
   };
 
+  /** Where the record came from (set by the archiver). */
+  source_url?: string;
   /** Free-form provenance note, shown in the device header. */
   source_note?: string;
 }
