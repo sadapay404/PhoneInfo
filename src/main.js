@@ -66,26 +66,28 @@ toggleFrameBtn.addEventListener('click', ()=>{
 // live clock
 function tickClock(){
   const now=new Date();
-  document.getElementById('statusClock').textContent=now.toLocaleTimeString([], {hour:'numeric', minute:'2-digit'});
+  const t=now.toLocaleTimeString([], {hour:'numeric', minute:'2-digit'});
+  const el=document.getElementById('statusClock');
+  if(el) el.textContent=t+' — Archive Open';
 }
 setInterval(tickClock, 1000); tickClock();
 
-// theme
+// theme — paper (default) vs ink (dark)
 const themeToggle=document.getElementById('themeToggle');
-let theme=localStorage.getItem('aether-theme')||'dark';
+let theme=localStorage.getItem('aether-theme')||'paper';
 function applyTheme(t){
-  document.documentElement.setAttribute('data-theme', t==='light'?'light':'');
-  themeToggle.textContent=t==='light'?'☀️':'🌙';
+  document.documentElement.setAttribute('data-theme', t==='ink'?'ink':'');
+  themeToggle.textContent=t==='ink'?'☀️':'◐';
   localStorage.setItem('aether-theme', t);
 }
 applyTheme(theme);
-themeToggle.addEventListener('click', ()=>{ theme=theme==='dark'?'light':'dark'; applyTheme(theme);});
+themeToggle.addEventListener('click', ()=>{ theme=theme==='paper'?'ink':'paper'; applyTheme(theme);});
 
 // toast
 function toast(msg){
   const t=document.createElement('div'); t.className='toast'; t.innerHTML=msg;
   t.style.position='fixed';t.style.bottom='22px';t.style.left='50%';t.style.transform='translateX(-50%)';
-  t.style.background='rgba(15,15,26,0.95)';t.style.color='white';t.style.border='1px solid rgba(255,255,255,0.12)';t.style.padding='10px 14px';t.style.borderRadius='999px';t.style.fontSize='13px';t.style.fontWeight='700';t.style.zIndex='100';t.style.display='flex';t.style.alignItems='center';t.style.gap='8px';t.style.boxShadow='0 12px 30px rgba(0,0,0,0.35)';
+  t.style.background='#1B1B1F';t.style.color='#FFFBF2';t.style.border='1.5px solid #1B1B1F';t.style.padding='10px 14px';t.style.borderRadius='999px';t.style.fontSize='12px';t.style.fontWeight='700';t.style.zIndex='100';t.style.display='flex';t.style.alignItems='center';t.style.gap='8px';t.style.boxShadow='4px 4px 0 #1B1B1F';t.style.fontFamily='IBM Plex Mono, monospace';
   document.body.appendChild(t);
   setTimeout(()=>t.remove(), 2600);
 }
@@ -128,8 +130,8 @@ let swReg=null;
 if('serviceWorker' in navigator){
   navigator.serviceWorker.register('/sw.js').then(reg=>{
     swReg=reg;
-    document.getElementById('swStatus').textContent='Active ✓ — Cached '+allPhones.length+' devices';
-    document.getElementById('swStatus').style.color='var(--success)';
+    document.getElementById('swStatus').textContent='Filed — '+allPhones.length+' cards in drawer';
+    document.getElementById('swStatus').style.color='var(--teal)';
   }).catch(()=>{ document.getElementById('swStatus').textContent='Offline-ready (fallback)';});
 }
 function updateOfflinePill(){
@@ -137,10 +139,10 @@ function updateOfflinePill(){
   const hint=document.getElementById('offlineHint');
   const online=navigator.onLine;
   if(online){
-    pill.innerHTML='<span class="dot"></span> Offline-Ready • IndexedDB ✓';
-    if(hint) hint.textContent='Online';
+    pill.innerHTML='<span class="dot"></span> Card catalog • Offline ready';
+    if(hint) hint.textContent='Paper Archive — Live';
   } else {
-    pill.innerHTML='<span style="width:8px;height:8px;border-radius:50%;background:var(--warning);display:inline-block;box-shadow:0 0 10px var(--warning)"></span> Offline Mode • Local Search ✓';
+    pill.innerHTML='<span style="width:7px;height:7px;border-radius:50%;background:var(--mustard);display:inline-block;border:1.5px solid var(--ink)"></span> Reading offline • Cards on desk';
     if(hint) hint.textContent='Offline';
   }
 }
@@ -511,7 +513,7 @@ async function renderCompare(){
     const weighted = (perf*(wP/total) + cam*(wC/total) + batt*(wB/total) + disp*(wD/total)).toFixed(1);
     return {p, weighted, perf:perf.toFixed(0), cam, batt:batt.toFixed(0), disp};
   }).sort((a,b)=> b.weighted-a.weighted);
-  document.getElementById('compareScores').innerHTML=`<div class="box"><div class="box-head"><h4>🏆 Custom Weighted Winner</h4><span class="micro-badge success">${scores[0].p.model} WINS</span></div><div class="box-body"><div class="kpi-row">${scores.map((s,i)=>`<div class="kpi" style="${i===0?'border-color:var(--success);background:rgba(0,230,118,0.08)':''}"><b>${s.weighted}</b><span>${s.p.model} ${i===0?'👑':''}</span><div style="font-size:10px;color:var(--muted);margin-top:4px">P${s.perf} • C${s.cam} • B${s.batt} • D${s.disp}</div></div>`).join('')}</div></div></div>`;
+  document.getElementById('compareScores').innerHTML=`<div class="box"><div class="box-head"><h4>Custom Weighted — Editor’s Pick</h4><span class="micro-badge accent">${scores[0].p.model} — Pick</span></div><div class="box-body"><div class="kpi-row">${scores.map((s,i)=>`<div class="kpi" style="${i===0?'border-color:var(--terrac);background:var(--terrac-light)':''}"><b>${s.weighted}</b><span>${s.p.model} ${i===0?'— pick':''}</span><div style="font-size:10px;color:var(--muted);margin-top:4px">P${s.perf} • C${s.cam} • B${s.batt} • D${s.disp}</div></div>`).join('')}</div></div></div>`;
 
 }
 ['highlightDiff','showWinner','wPerf','wCam','wBatt','wDisp'].forEach(id=>{
@@ -552,20 +554,20 @@ function initRadar(){
       data:{
         labels:['AnTuTu','Geekbench','3DMark','Efficiency (inv drain)','Camera','Display'],
         datasets:[
-          {label:a.model, data:[na.perf,na.geek,na.gpu,na.eff,na.cam,na.disp], borderColor:'#7c5cff', backgroundColor:'rgba(124,92,255,0.18)', pointBackgroundColor:'#7c5cff', borderWidth:2},
-          {label:b.model, data:[nb.perf,nb.geek,nb.gpu,nb.eff,nb.cam,nb.disp], borderColor:'#00e5ff', backgroundColor:'rgba(0,229,255,0.14)', pointBackgroundColor:'#00e5ff', borderWidth:2}
+          {label:a.model, data:[na.perf,na.geek,na.gpu,na.eff,na.cam,na.disp], borderColor:'#1B1B1F', backgroundColor:'rgba(27,27,31,0.10)', pointBackgroundColor:'#1B1B1F', borderWidth:2},
+          {label:b.model, data:[nb.perf,nb.geek,nb.gpu,nb.eff,nb.cam,nb.disp], borderColor:'#C25A3A', backgroundColor:'rgba(194,90,58,0.14)', pointBackgroundColor:'#C25A3A', borderWidth:2}
         ]
       },
       options:{
         responsive:true, maintainAspectRatio:false,
-        scales:{ r:{ min:0, max:100, ticks:{display:false, stepSize:20}, grid:{color:'rgba(255,255,255,0.07)'}, angleLines:{color:'rgba(255,255,255,0.07)'}, pointLabels:{color:'#9aa0b8', font:{size:10, weight:'700'}} } },
-        plugins:{ legend:{labels:{color:'#f5f5ff', font:{size:11, weight:'700'}, usePointStyle:true}}}
+        scales:{ r:{ min:0, max:100, ticks:{display:false, stepSize:20}, grid:{color:'#E8DDC9'}, angleLines:{color:'#E8DDC9'}, pointLabels:{color:'#6B6B7A', font:{family:'IBM Plex Mono', size:10, weight:'600'}} } },
+        plugins:{ legend:{labels:{color:'#1B1B1F', font:{family:'IBM Plex Mono', size:11, weight:'700'}, usePointStyle:true, boxWidth:10}}}
       }
     });
     document.getElementById('radarKpi').innerHTML=`
       <div class="kpi"><b>${a.benchmarks.antutu.toLocaleString()}</b><span>${a.model} AnTuTu</span></div>
       <div class="kpi"><b>${b.benchmarks.antutu.toLocaleString()}</b><span>${b.model} AnTuTu</span></div>
-      <div class="kpi"><b style="color:${a.benchmarks.batteryDrain < b.benchmarks.batteryDrain ? 'var(--success)' : 'var(--muted)'}">${a.benchmarks.batteryDrain}W</b><span>${a.model} Drain</span></div>
+      <div class="kpi"><b style="color:${a.benchmarks.batteryDrain < b.benchmarks.batteryDrain ? 'var(--teal)' : 'var(--muted)'}">${a.benchmarks.batteryDrain}W</b><span>${a.model} Drain</span></div>
     `;
   }
   aSel.addEventListener('change', draw); bSel.addEventListener('change', draw);
@@ -638,11 +640,11 @@ function drawSensors(){
   svg.innerHTML=`
     <rect x="${cx-refW/2}" y="${cy-refH/2}" width="${refW}" height="${refH}" rx="8" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="1.5" stroke-dasharray="6 6"/>
     <text x="${cx}" y="${cy-refH/2-10}" text-anchor="middle" fill="#6b7280" font-size="10" font-weight="800" letter-spacing="0.06em">FULL-FRAME 36×24mm REFERENCE</text>
-    <rect x="${cx-bW/2}" y="${cy-bH/2}" width="${bW}" height="${bH}" rx="6" fill="rgba(0,229,255,0.18)" stroke="#00e5ff" stroke-width="2"/>
-    <text x="${cx}" y="${cy+bH/2+14}" text-anchor="middle" fill="#00e5ff" font-size="11" font-weight="800">${pb.model.split(' ').slice(-2).join(' ')} • ${pb.camera.primary.size}</text>
-    <rect x="${cx-aW/2}" y="${cy-aH/2}" width="${aW}" height="${aH}" rx="6" fill="rgba(124,92,255,0.32)" stroke="#7c5cff" stroke-width="2.5"/>
-    <text x="${cx}" y="${cy-aH/2-8}" text-anchor="middle" fill="#7c5cff" font-size="11" font-weight="900">${pa.model.split(' ').slice(-2).join(' ')} • ${pa.camera.primary.size} • ${aSize.w}×${aSize.h}mm</text>
-    <line x1="${cx-aW/2}" y1="${cy+aH/2+2}" x2="${cx+aW/2}" y2="${cy+aH/2+2}" stroke="#7c5cff" stroke-width="1.2" marker-end="url(#arrow)"/>
+    <rect x="${cx-bW/2}" y="${cy-bH/2}" width="${bW}" height="${bH}" rx="6" fill="rgba(194,90,58,0.14)" stroke="#C25A3A" stroke-width="2"/>
+    <text x="${cx}" y="${cy+bH/2+14}" text-anchor="middle" fill="#C25A3A" font-size="11" font-weight="800">${pb.model.split(' ').slice(-2).join(' ')} • ${pb.camera.primary.size}</text>
+    <rect x="${cx-aW/2}" y="${cy-aH/2}" width="${aW}" height="${aH}" rx="6" fill="rgba(27,27,31,0.12)" stroke="#1B1B1F" stroke-width="2.5"/>
+    <text x="${cx}" y="${cy-aH/2-8}" text-anchor="middle" fill="#1B1B1F" font-size="11" font-weight="900">${pa.model.split(' ').slice(-2).join(' ')} • ${pa.camera.primary.size} • ${aSize.w}×${aSize.h}mm</text>
+    <line x1="${cx-aW/2}" y1="${cy+aH/2+2}" x2="${cx+aW/2}" y2="${cy+aH/2+2}" stroke="#1B1B1F" stroke-width="1.2" marker-end="url(#arrow)"/>
   `;
   const areaA=(aSize.w*aSize.h).toFixed(1);
   const areaB=(bSize.w*bSize.h).toFixed(1);
@@ -680,7 +682,7 @@ function initValueCalc(){
     }).sort((a,b)=> b.valueScore-a.valueScore);
     if(scored.length===0) list.innerHTML='<div class="empty" style="padding:12px"><b>No devices in budget</b></div>';
     else list.innerHTML=scored.slice(0,5).map((s,i)=>`
-      <div class="list-row" style="${i===0?'border-color:var(--success);background:rgba(0,230,118,0.08)':''}">
+      <div class="list-row" style="${i===0?'border-color:var(--ink);background:var(--paper-2)':''}">
         <img src="${s.p.image}" />
         <div style="flex:1">
           <b style="font-size:13px">${i===0?'👑 ':''}${s.p.brand} ${s.p.model} ${i===0?'<span class="micro-badge success" style="margin-left:6px">Best Value</span>':''}</b>
