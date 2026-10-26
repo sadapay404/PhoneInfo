@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { estimateEndurance, parseOpticalFormat, pointsPer100Usd, sensorGeometry } from './estimators';
 import { compareDevices, winnersFor } from './compare';
 import { SPEC_FIELDS } from '../data/specs';
-import { DEVICES } from '../data/devices';
+import { SEED_DEVICES as DEVICES } from '../data/seed';
 import { createDeviceSearch } from './search';
 
 const base = { screenOnHours: 5, brightness: 0.5, refreshHz: 120, load: 0.4 };

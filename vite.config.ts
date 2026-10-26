@@ -11,5 +11,5 @@ export default defineConfig({
     allowedHosts: true,
   },
   preview: { host: '0.0.0.0', port: 3000, strictPort: true, allowedHosts: true },
-  test: { environment: 'node', include: ['src/**/*.test.{ts,tsx}'] },
+  test: { environment: 'node', include: ['src/**/*.test.{ts,tsx}'], setupFiles: ['src/test/setup.ts'] },
 });

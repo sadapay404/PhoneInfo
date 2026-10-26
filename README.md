@@ -1,76 +1,84 @@
 # AetherPhone DB
 
-An offline-first phone encyclopedia: a typed, granular device schema, fuzzy local search,
-boxed spec cards, a compare matrix with per-category winners, and a few analysis tools.
-It runs as a static site with a service worker, so the app keeps working without a network.
+An offline-first phone encyclopedia. It has a typed device schema, instant fuzzy search,
+boxed spec sheets, a compare matrix with per-category winners, and a few analysis tools.
+It works on any screen size: a sidebar on desktop, a bottom tab bar on phones.
 
 ## Run it
 
 ```bash
 npm install
-npm run dev        # http://localhost:3000  (desktop shows the phone-frame simulator)
-npm test           # unit + smoke tests (Vitest)
-npm run build      # type-check + production build to dist/
+npm run dev          # http://localhost:3000
+npm run build        # regenerates the catalog, type-checks, builds to dist/
+npm run preview      # serve the production build (service worker enabled here)
+npm test             # Vitest: estimators, compare logic, search, catalog pipeline, app smoke tests
 ```
 
-Open the dev server in a desktop browser and you get the phone-frame wrapper:
-iOS/Android bezel, notch or punch-hole, live status-bar clock, home indicator,
-rotate, zoom, screen-size presets, and "Hide frame". On a real phone, or any narrow
-window (<720px) or touch-only device, the frame is skipped and the app runs full-screen.
-Append `?frameless` to the URL to skip it on desktop.
+To simulate a phone, use your browser's device mode. The layout adapts with no frame.
 
-## What is built
+## Architecture
 
-| Area | Status |
-| --- | --- |
-| Phone-frame simulator (iOS/Android, notch/punch-hole, clock, rotate, zoom, sizes, hide) | Done |
-| Device ontology (`src/data/types.ts`): display, SoC, cameras, audio, connectivity, battery, software, body/SAR | Done, many fields optional |
-| Field registry (`src/data/specs.ts`) driving detail cards, compare, and winner logic | Done |
-| Fuzzy search (Fuse.js, typo tolerant, fully local) | Done |
-| Boxed, collapsible category cards with missing-field badges and "Leads X" badges | Done |
-| Compare matrix: highlight differences, only-differences filter, winner per category, weighted overall score | Done (up to 4 devices) |
-| Battery endurance estimator (`src/lib/estimators.ts`) | Done (transparent model, not lab data) |
-| Camera sensor size visualizer (SVG, drawn to a shared scale) | Done (approximate geometry) |
-| Price-to-performance calculator | Done (user-supplied benchmark scores) |
-| Dark OLED (#000) and light themes, neon glass accents | Done |
-| Offline: service worker caches the app shell and assets; online/offline indicator | Done |
-| Catalog size | 4 seed devices |
+```
+catalog/devices.json          source of truth (edit this)
+        │  npm run catalog:build  (validates, chunks, compresses, hashes)
+        ▼
+public/catalog/manifest.json  version + per-chunk SHA-256 + counts
+public/catalog/chunk-*.lz16   LZ-string (UTF-16) compressed, content-addressed chunks
+        │
+        ├── app (useCatalog → syncCatalog): verify, decode, write to IndexedDB (Dexie)
+        └── service worker (Background Sync / Periodic Sync): prefetch chunks into cache
+```
+
+**Storage.** IndexedDB via Dexie holds the decompressed catalog. The app renders from it
+immediately on every visit, then syncs in the background when online. On the very first
+visit, before any sync, it uses the bundled copy in `catalog/devices.json`.
+
+**Ingestion.** `syncCatalog()` compares the manifest version with the stored version.
+If they differ, it downloads only the changed chunks, verifies each checksum, and
+swaps the table in one transaction. A failed sync keeps the last good data and shows a banner.
+
+**Background.** The service worker registers `sync` and `periodicsync` handlers for the
+`catalog-sync` tag. Chromium runs these when connectivity returns, or periodically for
+installed PWAs with permission. They prefetch the newest chunks into the cache, so a
+later offline visit works even if the page never synced.
+
+**Search.** Fuse.js runs in memory over the local catalog, so it is typo-tolerant and offline.
 
 ## Data provenance: read this
 
-The seed entries in `src/data/devices.ts` were entered from memory of manufacturer
-spec sheets. **They have not been checked against primary sources yet.** Each device
-carries a `source_note` saying so. Fields that were uncertain were left out on purpose,
-and the UI shows "—" for them. Verify values before you rely on them.
+The seed entries were entered from memory of manufacturer spec sheets. **They are not
+verified against primary sources yet.** Each entry has a `source_note` saying so. Uncertain
+fields were left out, and the UI shows them as "unknown". Check values before relying on them.
+No benchmark scores are bundled. Enter your own in the Price vs performance tool.
 
-No benchmark scores are bundled. The Value tool asks you to enter scores from a source you trust.
+## Adding devices
 
-## Not built yet (honest roadmap)
+1. Add an object to `catalog/devices.json` (keep `id` a lowercase slug).
+2. Run `npm run catalog:build`. Validation errors stop the build with a clear message.
+3. Commit `catalog/devices.json` and `public/catalog/`. Clients pick up the new version on their next sync.
 
-The original brief describes a much larger system. These parts are deliberately not
-done yet, for the reasons given:
+## Still not built
 
-1. **Catalog scale (10,000+ devices).** Needs a data pipeline with a licensed or
-   permitted source, plus a validation step. Scraping a site like GSMArena should be
-   checked against its terms first.
-2. **Background ingestion daemon** (Background Sync / Background Fetch for new releases
-   and image assets). The browser APIs need a real backend feed to be useful.
-3. **Storage layer.** The catalog is bundled as TypeScript for now. For a larger catalog,
-   move to IndexedDB (Dexie) or wa-sqlite, with lz-string chunks for the bulk payload.
-4. **Benchmark radar (Geekbench / AnTuTu / 3DMark vs. battery drain).** Needs verified
-   benchmark data first.
-5. **Richer schema** for SAR per-band values, exact 5G/4G band and CA lists, thermal
-   throttling curves, and iFixit/modularity data. The type shape allows these; the data isn't entered.
-6. **Image assets and WebP compression pipeline.**
+- **Catalog scale.** Ten thousand devices needs a permitted, verified data source plus
+  a review process. This repo has 4 devices. Scraping a third-party site should be
+  checked against its terms first.
+- **Benchmark radar** (Geekbench / AnTuTu / 3DMark against battery drain). Needs verified data.
+- **Richer schema** for per-band SAR, exact 5G/4G band and CA lists, throttling curves, and
+  iFixit/modularity scores. The type allows these fields, but no data is entered.
+- **Image pipeline** (WebP compression of device photos).
+- **Background Fetch** for large image downloads. Only the catalog data is prefetched so far.
 
 ## Layout
 
 ```
+catalog/            devices.json (source of truth)
+scripts/            build-catalog.mjs (validate + chunk + manifest)
+public/             sw.js, manifest, icon, catalog/ (generated)
 src/
-  data/       types.ts (ontology), specs.ts (field registry), devices.ts (seed catalog)
-  lib/        search.ts (Fuse), compare.ts (winners + weights), estimators.ts (tools) + tests
-  components/ PhoneFrame.tsx (device simulator), Box.tsx (collapsible card)
-  views/      Catalog.tsx, Compare.tsx, Tools.tsx
-  App.tsx     shell, hash routing (#/catalog/<id>, #/compare, #/tools), theme, offline state
-public/       sw.js (offline service worker), manifest, icon
+  data/             types.ts, specs.ts (field registry), seed.ts, db.ts (Dexie), catalogSync.ts
+  hooks/            useCatalog.ts (offline-first loading), useAppState.ts (routing, theme, compare)
+  lib/              search.ts (Fuse), compare.ts (winners + weights), estimators.ts (tools)
+  components/       Shell.tsx (responsive layout), Box.tsx, Icon.tsx
+  views/            Catalog.tsx, Compare.tsx, Tools.tsx
+  test/             setup.ts (fake IndexedDB, serves generated catalog to tests)
 ```
