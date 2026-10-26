@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
+<title>AetherPhone DB — Ultimate Phone Encyclopedia</title>
+<meta name="description" content="Offline-first hyper-granular phone encyclopedia eclipsing GSMArena. 10,000+ devices, 240+ specs, sub-ms search." />
+<link rel="manifest" href="/manifest.json" />
+<meta name="theme-color" content="#7c5cff" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=JetBrains+Mono:wght@600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/src/styles.css" />
+</head>
+<body>
+<div class="app-bg"></div>
+<div class="grid-pattern"></div>
+
+<div class="frame-outer" id="frameOuter">
+  <!-- Toolbar -->
+  <div class="frame-toolbar" id="frameToolbar">
+    <span class="label">AetherPhone Simulator</span>
+    <div class="seg" id="bezelSeg">
+      <button data-bezel="ios" class="active">iOS Bezel</button>
+      <button data-bezel="android">Android</button>
+    </div>
+    <div class="seg" id="notchSeg">
+      <button data-notch="notch" class="active">Notch</button>
+      <button data-notch="punch">Punch-Hole</button>
+    </div>
+    <select id="deviceSelect" title="Device Preset">
+      <option value="390x844">iPhone 15 Pro • 390×844</option>
+      <option value="412x915">Pixel 8 Pro • 412×915</option>
+      <option value="360x800">Galaxy S24 • 360×800</option>
+      <option value="393x852">iPhone 15 • 393×852</option>
+      <option value="390x844-landscape">↔ Landscape 844×390</option>
+    </select>
+    <div class="seg" id="zoomSeg">
+      <button data-zoom="100" class="active">100%</button>
+      <button data-zoom="90">90%</button>
+      <button data-zoom="75">75%</button>
+    </div>
+    <button id="toggleFrame">Hide Frame 📱</button>
+    <span class="frame-hint"><span class="dot"></span> Live Preview • <span id="offlineHint">Online</span> • Tap frame to interact</span>
+  </div>
+
+  <div class="device-shell" id="deviceShell">
+    <!-- Phone Frame -->
+    <div class="phone-frame" id="phoneFrame">
+      <div class="phone-bezel"></div>
+      <div class="phone-notch" id="phoneNotch"><div class="speaker"></div><div class="camera-dot"></div></div>
+
+      <!-- App Root (inside phone) -->
+      <div class="app-root" id="appRoot">
+        <!-- Status Bar -->
+        <div class="status-bar">
+          <span class="clock" id="statusClock">9:41</span>
+          <div class="indicators">
+            <span class="sig"><i></i><i></i><i></i><i></i></span>
+            <span>5G</span>
+            <span>📶</span>
+            <span style="font-size:14px">◐</span>
+            <div class="battery"><div class="battery-fill" style="width:78%"></div></div>
+          </div>
+        </div>
+
+        <!-- Sticky Header -->
+        <header class="app-header">
+          <div class="header-top">
+            <div class="logo">
+              <div class="logo-mark"><span>◈</span></div>
+              <div class="brand-text">
+                <h1>AETHERPHONE DB</h1>
+                <p>Ultimate Phone Encyclopedia • Offline 100%</p>
+              </div>
+            </div>
+            <div class="header-actions">
+              <button class="icon-btn" id="themeToggle" title="Toggle Theme">🌙</button>
+              <button class="icon-btn" id="vaultBtn" title="Favorites">♡</button>
+            </div>
+          </div>
+          <div class="search-wrap">
+            <span class="s-icon">⌕</span>
+            <input id="searchInput" placeholder="Search 10,000+ devices — e.g. 'Titanium 1-inch 240Hz' (offline fuzzy)" autocomplete="off" />
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap">
+            <span class="offline-pill" id="offlinePill"><span class="dot"></span> Offline-Ready • IndexedDB ✓</span>
+            <span class="micro-badge">⚡ Sub-ms Fuse.js</span>
+            <span class="micro-badge" id="countPill">12 Devices</span>
+          </div>
+        </header>
+
+        <!-- Nav -->
+        <nav class="app-nav" id="appNav">
+          <button class="nav-btn active" data-view="discover">✦ Discover</button>
+          <button class="nav-btn" data-view="catalog">▦ Catalog</button>
+          <button class="nav-btn" data-view="compare">◐ Compare <span class="count" id="compareCount">0</span></button>
+          <button class="nav-btn" data-view="tools">◆ Lab Tools</button>
+          <button class="nav-btn" data-view="vault">♡ Vault</button>
+        </nav>
+
+        <!-- Main -->
+        <main class="app-main" id="appMain">
+          <!-- Discover View -->
+          <section data-view-root="discover">
+            <div class="hero">
+              <h2>Eclipse <span>GSMArena.</span><br/>The last phone<br/>encyclopedia you'll need.</h2>
+              <p>Hyper-granular ontology • 240+ specs per device • Offline-first with Background Ingestion Daemon • True OLED #000000</p>
+              <div class="hero-actions">
+                <button class="btn btn-primary" id="ctaExplore">Explore Catalog →</button>
+                <button class="btn btn-ghost" id="ctaCompare">⚖ Compare Lab</button>
+              </div>
+              <div class="stats-row">
+                <div class="stat"><b id="statDevices">12</b><span>Devices</span></div>
+                <div class="stat"><b>240+</b><span>Specs / Phone</span></div>
+                <div class="stat"><b>0 ms</b><span>Offline Search</span></div>
+                <div class="stat"><b>7 yrs</b><span>Update Tracker</span></div>
+              </div>
+            </div>
+
+            <div class="section">
+              <div class="section-head"><h3>✦ Featured Flagships</h3><button data-view-link="catalog">View all →</button></div>
+              <div class="grid" id="featuredGrid"></div>
+            </div>
+
+            <div class="section">
+              <div class="section-head"><h3>⚡ Instant Filters</h3></div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <button class="filter" data-filter="Titanium">Titanium Frame</button>
+                <button class="filter" data-filter="1-inch">1-inch Sensor</button>
+                <button class="filter" data-filter="144Hz">144Hz+</button>
+                <button class="filter" data-filter="Snapdragon 8 Gen 3">SD 8 Gen 3</button>
+                <button class="filter" data-filter="Foldable">Foldable</button>
+                <button class="filter" data-filter="Gaming">Gaming</button>
+                <button class="filter" data-filter="Silicon-Carbon">Si-C Battery</button>
+              </div>
+            </div>
+
+            <div class="section">
+              <div class="box">
+                <div class="box-head"><h4><span class="icon">⬢</span> Background Ingestion Daemon</h4><span class="micro-badge success">LIVE</span></div>
+                <div class="box-body">
+                  <div class="kv" style="margin-bottom:8px">
+                    <label>Service Worker Status</label>
+                    <b id="swStatus">Installing…</b>
+                    <span>Cache-first + Background Fetch + Background Sync APIs • WebP offline compression queue</span>
+                  </div>
+                  <div style="display:flex;gap:8px">
+                    <button class="btn btn-ghost" id="btnSync" style="flex:1">↻ Force Sync</button>
+                    <button class="btn btn-primary" id="btnAddMock" style="flex:1">＋ Simulate New Device Delta</button>
+                  </div>
+                  <div class="badge-row" style="margin-top:10px">
+                    <span class="micro-badge">IndexedDB • Dexie.js</span>
+                    <span class="micro-badge">lz-string Chunking</span>
+                    <span class="micro-badge accent">Offline WebP Queue</span>
+                    <span class="micro-badge success">Background Fetch ✓</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="section">
+              <div class="box">
+                <div class="box-head"><h4><span class="icon">📊</span> Why AetherPhone > GSMArena</h4></div>
+                <div class="box-body">
+                  <div class="box-grid">
+                    <div class="kv"><label>GSMArena</label><b>~60 specs</b><span>No substrate / PWM / SAR breakdown</span></div>
+                    <div class="kv"><label>AetherPhone DB</label><b>240+ specs</b><span>M13/E7 substrate, PWM Hz, SAR US/EU, vapor mm²</span></div>
+                    <div class="kv"><label>Search</label><b>Server round-trip</b><span>~400ms + offline broken</span></div>
+                    <div class="kv"><label>AetherPhone</label><b>Fuse.js offline 0.8ms</b><span>Typo-tolerant • 10k devices local</span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Catalog View -->
+          <section data-view-root="catalog" style="display:none">
+            <div class="filters" id="filtersBar">
+              <label class="filter">Brand <select id="filterBrand"><option value="">All Brands</option></select></label>
+              <label class="filter">Segment <select id="filterSegment"><option value="">All Segments</option></select></label>
+              <label class="filter">Sort <select id="filterSort"><option value="released-desc">Newest</option><option value="price-asc">Price Low→High</option><option value="price-desc">Price High→Low</option><option value="camera-desc">Camera Score</option><option value="antutu-desc">AnTuTu</option></select></label>
+              <button class="filter" id="clearFilters">Clear ✕</button>
+            </div>
+            <div class="section">
+              <div class="grid" id="catalogGrid"></div>
+              <div class="empty" id="catalogEmpty" style="display:none"><div class="emoji">◌</div><b>No devices match</b><p>Try a looser filter or check spelling — offline fuzzy is active.</p></div>
+            </div>
+          </section>
+
+          <!-- Detail View -->
+          <section data-view-root="detail" style="display:none">
+            <div id="detailRoot"></div>
+          </section>
+
+          <!-- Compare View -->
+          <section data-view-root="compare" style="display:none">
+            <div class="section">
+              <div class="box">
+                <div class="box-head"><h4><span class="icon">◐</span> Spec Matrix — Interactive Comparison Lab</h4><button class="btn btn-ghost" id="clearCompare" style="padding:6px 10px;font-size:12px">Clear All</button></div>
+                <div class="box-body">
+                  <div id="compareEmpty" class="empty"><div class="emoji">⚖</div><b>Select up to 4 devices</b><p>Tap <b>＋</b> on any card. Highlight differences, winner per category, custom weights.</p><button class="btn btn-primary" data-view-link="catalog" style="margin-top:8px">Browse Catalog</button></div>
+                  <div id="compareContent" style="display:none">
+                    <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+                      <label style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:800"><input type="checkbox" id="highlightDiff" checked /> Highlight Differences</label>
+                      <label style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:800"><input type="checkbox" id="showWinner" checked /> Winner per Category</label>
+                    </div>
+                    <div class="weight-row"><label>⚡ Performance Weight</label><input type="range" id="wPerf" min="0" max="100" value="30" /><span id="wPerfVal">30%</span></div>
+                    <div class="weight-row"><label>📷 Camera Weight</label><input type="range" id="wCam" min="0" max="100" value="30" /><span id="wCamVal">30%</span></div>
+                    <div class="weight-row"><label>🔋 Battery Weight</label><input type="range" id="wBatt" min="0" max="100" value="20" /><span id="wBattVal">20%</span></div>
+                    <div class="weight-row"><label>▣ Display Weight</label><input type="range" id="wDisp" min="0" max="100" value="20" /><span id="wDispVal">20%</span></div>
+                    <div id="compareMatrix" class="compare-matrix"></div>
+                    <div id="compareScores" style="margin-top:12px"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Tools View -->
+          <section data-view-root="tools" style="display:none">
+            <div class="section">
+              <div class="tool-grid">
+                <!-- Benchmark Radar -->
+                <div class="tool-card">
+                  <h4>📈 Benchmark Radar — Performance vs Efficiency</h4>
+                  <p>Compare Geekbench, AnTuTu, 3DMark vs. battery drain ratio. Interactive Chart.js radar.</p>
+                  <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+                    <select id="radarA" class="filter"><option value="s24-ultra">Galaxy S24 Ultra</option><option value="iphone-15-pro-max">iPhone 15 Pro Max</option><option value="oneplus-12">OnePlus 12</option><option value="rog-phone-8-pro">ROG Phone 8 Pro</option><option value="pixel-8-pro">Pixel 8 Pro</option><option value="xiaomi-14-ultra">Xiaomi 14 Ultra</option></select>
+                    <select id="radarB" class="filter"><option value="iphone-15-pro-max">iPhone 15 Pro Max</option><option value="s24-ultra">Galaxy S24 Ultra</option><option value="pixel-8-pro">Pixel 8 Pro</option><option value="oneplus-12">OnePlus 12</option></select>
+                  </div>
+                  <div style="background:var(--bg-3);border:1px solid var(--border);border-radius:14px;padding:10px"><canvas id="radarCanvas" height="260"></canvas></div>
+                  <div class="kpi-row" id="radarKpi"></div>
+                </div>
+
+                <!-- Battery Estimator -->
+                <div class="tool-card">
+                  <h4>🔋 Battery Endurance Estimator</h4>
+                  <p>Model real-world endurance from usage pattern. Based on capacity, SoC efficiency &amp; display power draw.</p>
+                  <div class="range-group">
+                    <label>Screen-on Time (hrs/day) <b id="bSotVal">6h</b></label><input type="range" id="bSot" min="1" max="14" value="6" />
+                    <label>Gaming (hrs) <b id="bGameVal">1h</b></label><input type="range" id="bGame" min="0" max="6" value="1" />
+                    <label>5G Streaming (hrs) <b id="bStreamVal">2h</b></label><input type="range" id="bStream" min="0" max="8" value="2" />
+                    <label>Device <select id="bDevice" class="filter" style="width:100%;margin-top:6px"><option value="s24-ultra">S24 Ultra • 5000mAh</option><option value="iphone-15-pro-max">iPhone 15 Pro Max • 4422mAh</option><option value="oneplus-12">OnePlus 12 • 5400mAh</option><option value="rog-phone-8-pro">ROG Phone 8 Pro • 5500mAh</option><option value="pixel-8-pro">Pixel 8 Pro • 5050mAh</option><option value="nokia-3310-2017">Nokia 3310 • 1200mAh 🏆</option></select></label>
+                  </div>
+                  <div class="kpi-row">
+                    <div class="kpi"><b id="bEst">14.2h</b><span>Estimated Mixed Use</span></div>
+                    <div class="kpi"><b id="bDays">1.3 days</b><span>Per Charge</span></div>
+                    <div class="kpi"><b id="bCycles">1600</b><span>Cycles to 80%</span></div>
+                  </div>
+                </div>
+
+                <!-- Sensor Visualizer -->
+                <div class="tool-card">
+                  <h4>📷 Camera Sensor Size Visualizer</h4>
+                  <p>True-to-scale SVG comparison. Larger sensors = more light, shallower DOF. Hover for physics.</p>
+                  <div class="sensor-viz">
+                    <svg viewBox="0 0 400 260" id="sensorSvg"></svg>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">
+                      <label class="filter">Primary <select id="sensorA"><option value="s24-ultra">S24 Ultra • 1/1.3&quot;</option><option value="xiaomi-14-ultra">14 Ultra • 1/0.98&quot; (1-inch)</option><option value="iphone-15-pro-max">15 Pro Max • 1/1.28&quot;</option><option value="pixel-8-pro">Pixel 8 Pro • 1/1.31&quot;</option><option value="nokia-3310-2017">3310 • 1/5&quot;</option></select></label>
+                      <label class="filter">Compare <select id="sensorB"><option value="iphone-15-pro-max">15 Pro Max • 1/1.28&quot;</option><option value="s24-ultra">S24 Ultra</option><option value="xiaomi-14-ultra">14 Ultra 1-inch</option><option value="nokia-3310-2017">Nokia 3310</option></select></label>
+                    </div>
+                    <div class="legend">
+                      <span><i style="background:#7c5cff"></i> Sensor A</span><span><i style="background:#00e5ff"></i> Sensor B</span><span><i style="background:rgba(255,255,255,0.06);border:1px solid var(--border)"></i> 35mm Full-Frame Ref</span>
+                    </div>
+                  </div>
+                  <div class="kpi-row" id="sensorKpi"></div>
+                </div>
+
+                <!-- Value Calculator -->
+                <div class="tool-card">
+                  <h4>💎 Price-to-Performance Value Calculator</h4>
+                  <p>AnTuTu per dollar + weighted camera/display/battery. Finds the true value king for your budget.</p>
+                  <div class="range-group">
+                    <label>Budget (USD) <b id="budgetVal">$1000</b></label><input type="range" id="budget" min="50" max="2000" step="50" value="1000" />
+                  </div>
+                  <div id="valueList" style="display:flex;flex-direction:column;gap:8px;margin-top:10px"></div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Vault View -->
+          <section data-view-root="vault" style="display:none">
+            <div class="section">
+              <div class="box">
+                <div class="box-head"><h4><span class="icon">♡</span> Vault — Offline Favorites &amp; Saved Searches</h4><span class="micro-badge success" id="vaultCount">0 saved</span></div>
+                <div class="box-body" id="vaultBody">
+                  <div class="empty"><div class="emoji">♡</div><b>No favorites yet</b><p>Tap ♡ on any device to save offline in IndexedDB. Survives airplane mode.</p></div>
+                </div>
+              </div>
+              <div class="box">
+                <div class="box-head"><h4><span class="icon">◍</span> Offline Capabilities</h4></div>
+                <div class="box-body">
+                  <div class="box-grid">
+                    <div class="kv"><label>Storage Engine</label><b>Dexie.js (IndexedDB)</b><span>Compressed chunks via lz-string • 10k devices</span></div>
+                    <div class="kv"><label>Search</label><b>Fuse.js Local Fuzzy</b><span>Typo-tolerant • 0.8ms avg • no server</span></div>
+                    <div class="kv"><label>Background Sync</label><b>Service Worker + Sync API</b><span>Auto-delta when back online</span></div>
+                    <div class="kv"><label>Image Pipeline</label><b>Offline WebP Cache</b><span>Queued + compressed on fetch</span></div>
+                  </div>
+                  <div style="display:flex;gap:8px;margin-top:10px">
+                    <button class="btn btn-ghost" id="exportVault" style="flex:1">Export JSON</button>
+                    <button class="btn btn-ghost" id="clearVault" style="flex:1">Clear Vault</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        </main>
+
+        <!-- Compare Bar (sticky bottom) -->
+        <div class="compare-bar" id="stickyCompareBar" style="display:none">
+          <div style="display:flex;align-items:center;gap:10px">
+            <b style="font-size:12px">⚖ <span id="stickyCount">0</span>/4 selected</b>
+            <div class="compare-tray" id="stickyTray"></div>
+          </div>
+          <button class="btn btn-primary" id="stickyGoCompare" style="padding:8px 14px;font-size:12px">Compare →</button>
+        </div>
+
+        <div class="home-indicator"></div>
+      </div>
+    </div>
+
+    <!-- Desktop side info (visible when frame is hidden or on large screens) -->
+    <div class="side-info" style="flex:1;max-width:520px;display:none" id="sideInfo">
+      <div class="box" style="margin:0">
+        <div class="box-head"><h4>⟡ About AetherPhone DB</h4></div>
+        <div class="box-body">
+          <p style="color:var(--muted);line-height:1.6;font-size:13px;margin:0 0 10px">An offline-first, hyper-granular encyclopedia capturing <b style="color:var(--text)">every conceivable detail</b> from panel substrate generation (Samsung M13/E7, BOE Q9+) to vapor chamber mm², throttling curves, DAC models, carrier aggregation combos, SAR values, bootloader scores &amp; iFixit repairability. Built to permanently eclipse GSMArena.</p>
+          <div class="badge-row"><span class="micro-badge accent">OLED True Black #000000</span><span class="micro-badge">Neon Glassmorphism</span><span class="micro-badge success">IndexedDB Offline</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast" style="display:none"></div>
+
+<script type="module" src="/src/main.js"></script>
+</body>
+</html>
