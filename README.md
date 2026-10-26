@@ -65,6 +65,62 @@ Each device captures:
 
 ---
 
+## 🚀 Quick Start — Local & Google Cloud Shell (GCC)
+
+### 1. Clone & Enter Directory (IMPORTANT)
+You **must** run npm inside the `PhoneInfo` folder, not your home folder.
+
+```bash
+git clone https://github.com/sadapay404/PhoneInfo.git
+cd PhoneInfo
+ls   # you should see package.json, vite.config.js, src/
+```
+
+> **Your error was:** `npm error path /home/mubashirmalik0481/package.json` — you were in `~` not `~/PhoneInfo`.
+
+### 2. Install Dependencies
+```bash
+npm install
+```
+
+### 3. Run Dev Server (Phone-Frame Preview)
+```bash
+npm run dev
+# → http://localhost:3000
+# Vite binds to 0.0.0.0:3000 with allowedHosts:true (works on Cloud Shell preview)
+```
+
+**For Google Cloud Shell (GCC):**
+1. After `npm run dev`, click **Web Preview → Preview on port 3000** (top-right in Cloud Shell)
+2. Or click **Change Preview Port → 3000** if it shows 8080
+3. If firewall asks, click **Allow**
+4. App opens in new tab as `https://3000-cs-xxxxxxxxxx.cloudshell.dev` — frame + app fully functional
+
+Alternative manual preview URL:
+```bash
+# In Cloud Shell, get preview URL:
+echo "https://3000-cs-$(echo $DEVSHELL_PROJECT_ID | cut -c1-8).cloudshell.dev"
+# Then open it, or use the Web Preview button
+```
+
+### 4. Production Build (Optional)
+```bash
+npm run build
+npm run preview
+# also serves on 0.0.0.0:3000
+```
+
+### Troubleshooting GCC
+
+| Issue | Fix |
+|---|---|
+| `ENOENT package.json` | You forgot `cd PhoneInfo` — run `pwd` and ensure it ends in `/PhoneInfo` |
+| Port not visible | Cloud Shell preview only supports 8080/3000/5000 etc. Our app uses **3000** — use Web Preview button |
+| `Blocked host` 403 | Already fixed in `vite.config.js` (`allowedHosts:true`) — pull latest: `git pull origin main` |
+| No internet for npm | Cloud Shell has internet — if offline, `npm install --offline` not supported |
+
+---
+
 ## 🏗️ Architecture
 
 ```
@@ -86,25 +142,6 @@ AetherPhoneDB
 
 ---
 
-## 🚀 Quick Start
-
-```bash
-# install
-npm install
-
-# dev (phone-frame preview)
-npm run dev
-# → http://localhost:3000
-
-# production build
-npm run build
-npm run preview
-```
-
-No env vars required. Works offline after first load.
-
----
-
 ## 🗂️ Project Structure
 
 ```
@@ -116,7 +153,7 @@ src/
   styles.css          # OLED dark / light / glassmorphism + boxed system + frame
   main.js             # app: search, catalog, detail, compare, lab tools, vault
 index.html            # frame wrapper + app shell
-vite.config.js        # 0.0.0.0 + allowedHosts:true for Arena preview
+vite.config.js        # 0.0.0.0 + allowedHosts:true for Arena & GCC preview
 ```
 
 ---
