@@ -2,322 +2,261 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
-<title>AetherPhone DB — A Human Archive</title>
-<meta name="description" content="A quiet, offline-first archive of every phone ever made. Hand-measured, typeset like a printed catalog." />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AetherPhone DB — The Phone Encyclopedia</title>
+<meta name="description" content="Offline-first. 240+ specs per device. Search, compare, and file every phone ever made." />
 <link rel="manifest" href="/manifest.json" />
-<meta name="theme-color" content="#1B1B1F" />
+<meta name="theme-color" content="#0A0A0A" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,ital,wght@9..144,0,700;9..144,0,900;9..144,1,700&family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/src/styles.css" />
 </head>
 <body>
-
-<div class="frame-outer" id="frameOuter">
-  <!-- Desk masthead — stamped, imperfect -->
-  <div class="frame-toolbar" id="frameToolbar">
-    <span class="label">Desk Controls — AetherPhone No. 047</span>
-    <div class="seg" id="bezelSeg">
-      <button data-bezel="ios" class="active">iOS Frame</button>
-      <button data-bezel="android">Android</button>
-    </div>
-    <div class="seg" id="notchSeg">
-      <button data-notch="notch" class="active">Notch</button>
-      <button data-notch="punch">Punch-hole</button>
-    </div>
-    <select id="deviceSelect" title="Device Preset">
-      <option value="390x844">390×844 — Field Specimen</option>
-      <option value="412x915">412×915 — Large Print</option>
-      <option value="360x800">360×800 — Compact</option>
-      <option value="393x852">393×852 — Tall Folio</option>
-      <option value="390x844-landscape">↔ Landscape — Spread</option>
-    </select>
-    <div class="seg" id="zoomSeg">
-      <button data-zoom="100" class="active">100%</button>
-      <button data-zoom="90">90%</button>
-      <button data-zoom="75">75%</button>
-    </div>
-    <button id="toggleFrame">Hide Desk → Full Page</button>
-    <span class="frame-hint"><span class="dot"></span> <span id="offlineHint">Paper Archive — Offline ✓</span> • Hand-set</span>
-  </div>
-
-  <div class="device-shell" id="deviceShell">
-    <!-- Phone — sitting on desk, slight rotation like a real object -->
-    <div class="phone-frame" id="phoneFrame">
-      <div class="phone-bezel"></div>
-      <div class="phone-notch" id="phoneNotch"><div class="speaker"></div><div class="camera-dot"></div></div>
-
-      <div class="app-root" id="appRoot">
-        <!-- Typed status bar — like a catalog label -->
-        <div class="status-bar">
-          <span class="clock" id="statusClock">9:41 — Archive Open</span>
-          <div class="indicators">
-            <span class="sig"><i></i><i></i><i></i><i></i></span>
-            <span>Filed</span>
-            <span style="letter-spacing:0.12em; font-size:10px">●●●</span>
-            <div class="battery"><div class="battery-fill" style="width:78%"></div></div>
-          </div>
-        </div>
-
-        <header class="app-header">
-          <div class="header-top">
-            <div class="logo">
-              <div class="logo-mark"><span>A</span></div>
-              <div class="brand-text">
-                <h1>AetherPhone <em>Archive</em></h1>
-                <p>Hand-measured • Printed on paper in 2024 • Offline — no cloud</p>
-              </div>
-            </div>
-            <div class="header-actions">
-              <button class="icon-btn" id="themeToggle" title="Paper / Ink">◐</button>
-              <button class="icon-btn" id="vaultBtn" title="Saved to drawer">✎</button>
-            </div>
-          </div>
-          <div class="search-wrap">
-            <span class="s-icon">⌞</span>
-            <input id="searchInput" placeholder="Search the stacks — try “titanium”, “1-inch” or “G3”" autocomplete="off" />
-          </div>
-          <div style="display:flex;align-items:center;gap:7px;margin-top:9px;flex-wrap:wrap">
-            <span class="offline-pill" id="offlinePill"><span class="dot"></span> Card catalog • Offline</span>
-            <span class="micro-badge">Curated • 12 specimens</span>
-            <span class="micro-badge" id="countPill">12 Devices</span>
-          </div>
-        </header>
-
-        <nav class="app-nav" id="appNav">
-          <button class="nav-btn active" data-view="discover">— Index</button>
-          <button class="nav-btn" data-view="catalog">— Stacks</button>
-          <button class="nav-btn" data-view="compare">— Compare <span class="count" id="compareCount">0</span></button>
-          <button class="nav-btn" data-view="tools">— Lab</button>
-          <button class="nav-btn" data-view="vault">— Drawer</button>
-        </nav>
-
-        <main class="app-main" id="appMain">
-          <!-- DISCOVER — editorial, human -->
-          <section data-view-root="discover">
-            <div class="hero">
-              <h2>A quiet archive <span>of every phone</span><br/>ever made. <i>Hand-measured.</i></h2>
-              <p>We got tired of spec sheets that lie. So we built a <strong>printed catalog</strong> — every sensor measured, every vapor chamber traced, every SAR value filed. No ads. No cloud. Works in airplane mode. Typeset for humans.</p>
-              <div class="hero-actions">
-                <button class="btn btn-primary" id="ctaExplore">Browse the Stacks →</button>
-                <button class="btn btn-ghost" id="ctaCompare">Open Compare</button>
-              </div>
-              <div class="stats-row">
-                <div class="stat"><b id="statDevices">12</b><span>Specimens</span></div>
-                <div class="stat"><b>240+</b><span>Fields each</span></div>
-                <div class="stat"><b>Offline</b><span>Always</span></div>
-                <div class="stat"><b>2017–24</b><span>Range</span></div>
-              </div>
-              <div style="margin-top:12px; font-family:var(--font-mono); font-size:10px; color:var(--muted); letter-spacing:0.05em; line-height:1.5; border-top:1.5px dashed var(--line); padding-top:10px">
-                <span style="color:var(--ink); font-weight:700">Editor’s note:</span> This is not a tech blog. It’s a reference desk. Misprints are intentional — they mean a human was here. — <em style="font-family:var(--font-serif); font-style:italic; font-size:12px; color:var(--ink)">M.</em>
-              </div>
-            </div>
-
-            <div class="section">
-              <div class="section-head"><h3>Featured <em>folios</em></h3><button data-view-link="catalog">See all →</button></div>
-              <div class="grid" id="featuredGrid"></div>
-              <div style="margin-top:10px; font-family:var(--font-mono); font-size:10px; color:var(--muted); text-align:center; letter-spacing:0.06em">— Each card is printed, not rendered —</div>
-            </div>
-
-            <div class="section">
-              <div class="section-head"><h3>Browse by <em>trait</em></h3></div>
-              <div style="display:flex;gap:8px;flex-wrap:wrap">
-                <button class="filter" data-filter="Titanium">■ Titanium</button>
-                <button class="filter" data-filter="1-inch">◎ 1-inch sensor</button>
-                <button class="filter" data-filter="144Hz">≋ 144Hz+</button>
-                <button class="filter" data-filter="Snapdragon 8 Gen 3">⬡ SD 8 Gen 3</button>
-                <button class="filter" data-filter="Foldable">▭ Foldable</button>
-                <button class="filter" data-filter="Silicon-Carbon">⬢ Si-C battery</button>
-              </div>
-            </div>
-
-            <div class="section">
-              <div class="box">
-                <div class="box-head"><h4><span class="icon">◈</span> How this stays offline</h4><span class="micro-badge success">Filed</span></div>
-                <div class="box-body">
-                  <div class="kv" style="margin-bottom:10px; background:var(--paper-2)">
-                    <label>Archivist’s log</label>
-                    <b id="swStatus">Shelving cards…</b>
-                    <span>IndexedDB + Service Worker. We file every spec on your device. No tracking. If we lose power, the cards stay.</span>
-                  </div>
-                  <div style="display:flex;gap:8px">
-                    <button class="btn btn-ghost" id="btnSync" style="flex:1">↺ Re-file</button>
-                    <button class="btn btn-primary" id="btnAddMock" style="flex:1">＋ New acquisition</button>
-                  </div>
-                  <div class="badge-row" style="margin-top:10px">
-                    <span class="micro-badge">Dexie.js</span>
-                    <span class="micro-badge">Fuse.js</span>
-                    <span class="micro-badge">Filed offline</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="section" style="padding-top:0">
-              <div style="border:1.5px solid var(--ink); border-radius:14px; padding:14px; background:var(--paper-2); box-shadow:3px 3px 0 var(--ink); transform:rotate(-0.2deg)">
-                <div style="font-family:var(--font-mono); font-size:10px; letter-spacing:0.12em; text-transform:uppercase; color:var(--terrac); font-weight:800; margin-bottom:8px">Why we made this —</div>
-                <div style="font-family:var(--font-display); font-size:14px; line-height:1.4; font-weight:700">GSMArena is a warehouse. We wanted a <em style="font-family:var(--font-serif); font-weight:400; font-style:italic; color:var(--terrac)">reading room</em>.</div>
-                <div style="margin-top:8px; display:grid; grid-template-columns:1fr 1fr; gap:10px; font-size:12px; line-height:1.5">
-                  <div><strong>They show 60 fields.</strong><br><span style="color:var(--muted)">No substrate, no PWM, no SAR split.</span></div>
-                  <div><strong>We file 240+.</strong><br><span style="color:var(--muted)">M13/E7, vapor mm², DAC chip, throttling curve.</span></div>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <!-- CATALOG -->
-          <section data-view-root="catalog" style="display:none">
-            <div class="filters" id="filtersBar">
-              <label class="filter">Maker <select id="filterBrand"><option value="">All</option></select></label>
-              <label class="filter">Drawer <select id="filterSegment"><option value="">All drawers</option></select></label>
-              <label class="filter">Order <select id="filterSort"><option value="released-desc">Newest first</option><option value="price-asc">Price — low</option><option value="price-desc">Price — high</option><option value="camera-desc">Camera</option><option value="antutu-desc">AnTuTu</option></select></label>
-              <button class="filter" id="clearFilters">Clear ✕</button>
-            </div>
-            <div class="section">
-              <div class="grid" id="catalogGrid"></div>
-              <div class="empty" id="catalogEmpty" style="display:none"><div class="emoji">—</div><b>Nothing in this drawer</b><p>Try a different filter. The cards are still here.</p></div>
-            </div>
-          </section>
-
-          <!-- DETAIL -->
-          <section data-view-root="detail" style="display:none">
-            <div id="detailRoot"></div>
-          </section>
-
-          <!-- COMPARE -->
-          <section data-view-root="compare" style="display:none">
-            <div class="section">
-              <div class="box">
-                <div class="box-head"><h4><span class="icon">≈</span> Comparison table — laid on the desk</h4><button class="btn btn-ghost" id="clearCompare" style="padding:6px 10px;font-size:11px;box-shadow:1px 1px 0 var(--ink)">Clear</button></div>
-                <div class="box-body">
-                  <div id="compareEmpty" class="empty"><div class="emoji">≈</div><b>Pick up to four cards</b><p>Tap <b>+</b> on any card. We’ll lay them side-by-side.</p><button class="btn btn-primary" data-view-link="catalog" style="margin-top:8px">Go to Stacks</button></div>
-                  <div id="compareContent" style="display:none">
-                    <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
-                      <label style="display:flex;align-items:center;gap:6px;font-family:var(--font-mono);font-size:11px;font-weight:700"><input type="checkbox" id="highlightDiff" checked /> Mark differences</label>
-                      <label style="display:flex;align-items:center;gap:6px;font-family:var(--font-mono);font-size:11px;font-weight:700"><input type="checkbox" id="showWinner" checked /> Crown winner</label>
-                    </div>
-                    <div class="weight-row"><label>Performance</label><input type="range" id="wPerf" min="0" max="100" value="30" /><span id="wPerfVal">30%</span></div>
-                    <div class="weight-row"><label>Camera</label><input type="range" id="wCam" min="0" max="100" value="30" /><span id="wCamVal">30%</span></div>
-                    <div class="weight-row"><label>Battery</label><input type="range" id="wBatt" min="0" max="100" value="20" /><span id="wBattVal">20%</span></div>
-                    <div class="weight-row"><label>Display</label><input type="range" id="wDisp" min="0" max="100" value="20" /><span id="wDispVal">20%</span></div>
-                    <div id="compareMatrix" class="compare-matrix"></div>
-                    <div id="compareScores" style="margin-top:12px"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <!-- TOOLS / LAB -->
-          <section data-view-root="tools" style="display:none">
-            <div class="section">
-              <div class="tool-grid">
-                <div class="tool-card">
-                  <h4>Benchmark — plotted by hand</h4>
-                  <p>We plot AnTuTu, Geekbench and 3DMark the way we’d plot on graph paper. Pick two specimens.</p>
-                  <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
-                    <select id="radarA" class="filter"><option value="s24-ultra">S24 Ultra</option><option value="iphone-15-pro-max">15 Pro Max</option><option value="oneplus-12">OnePlus 12</option><option value="rog-phone-8-pro">ROG 8 Pro</option><option value="pixel-8-pro">Pixel 8 Pro</option><option value="xiaomi-14-ultra">14 Ultra</option></select>
-                    <select id="radarB" class="filter"><option value="iphone-15-pro-max">15 Pro Max</option><option value="s24-ultra">S24 Ultra</option><option value="pixel-8-pro">Pixel 8 Pro</option><option value="oneplus-12">OnePlus 12</option></select>
-                  </div>
-                  <div style="background:var(--paper-2);border:1.5px solid var(--ink);border-radius:12px;padding:10px;box-shadow:2px 2px 0 var(--ink)"><canvas id="radarCanvas" height="260"></canvas></div>
-                  <div class="kpi-row" id="radarKpi"></div>
-                </div>
-
-                <div class="tool-card">
-                  <h4>Battery — field test</h4>
-                  <p>How long will it last on *your* day? Move the sliders — we estimate from real drain.</p>
-                  <div class="range-group">
-                    <label>Screen time <b id="bSotVal">6h</b></label><input type="range" id="bSot" min="1" max="14" value="6" />
-                    <label>Gaming <b id="bGameVal">1h</b></label><input type="range" id="bGame" min="0" max="6" value="1" />
-                    <label>Streaming <b id="bStreamVal">2h</b></label><input type="range" id="bStream" min="0" max="8" value="2" />
-                    <label>Specimen <select id="bDevice" class="filter" style="width:100%;margin-top:6px"><option value="s24-ultra">S24 Ultra • 5000mAh</option><option value="iphone-15-pro-max">15 Pro Max • 4422mAh</option><option value="oneplus-12">OnePlus 12 • 5400mAh</option><option value="rog-phone-8-pro">ROG 8 Pro • 5500mAh</option><option value="pixel-8-pro">Pixel 8 Pro • 5050mAh</option><option value="nokia-3310-2017">Nokia 3310 • 1200mAh</option></select></label>
-                  </div>
-                  <div class="kpi-row">
-                    <div class="kpi"><b id="bEst">14.2h</b><span>Mixed use</span></div>
-                    <div class="kpi"><b id="bDays">1.3 days</b><span>Per charge</span></div>
-                    <div class="kpi"><b id="bCycles">1600</b><span>Cycles to 80%</span></div>
-                  </div>
-                </div>
-
-                <div class="tool-card">
-                  <h4>Sensor — true size</h4>
-                  <p>Drawn to scale. A 1-inch sensor is 4× a 1/3-inch. Hold the page up to the light.</p>
-                  <div class="sensor-viz">
-                    <svg viewBox="0 0 400 260" id="sensorSvg"></svg>
-                    <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">
-                      <label class="filter">Specimen A <select id="sensorA"><option value="s24-ultra">S24 Ultra • 1/1.3"</option><option value="xiaomi-14-ultra">14 Ultra • 1"</option><option value="iphone-15-pro-max">15 Pro Max • 1/1.28"</option></select></label>
-                      <label class="filter">Specimen B <select id="sensorB"><option value="iphone-15-pro-max">15 Pro Max</option><option value="s24-ultra">S24 Ultra</option></select></label>
-                    </div>
-                    <div class="legend">
-                      <span><i style="background:var(--ink)"></i> A</span><span><i style="background:var(--terrac)"></i> B</span><span><i style="background:var(--paper);border:1.5px solid var(--ink)"></i> Full-frame</span>
-                    </div>
-                  </div>
-                  <div class="kpi-row" id="sensorKpi"></div>
-                </div>
-
-                <div class="tool-card">
-                  <h4>Value — what’s worth it?</h4>
-                  <p>We divide performance by price, then add taste. Set a budget, find the honest one.</p>
-                  <div class="range-group">
-                    <label>Budget <b id="budgetVal">$1000</b></label><input type="range" id="budget" min="50" max="2000" step="50" value="1000" />
-                  </div>
-                  <div id="valueList" style="display:flex;flex-direction:column;gap:8px;margin-top:10px"></div>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <!-- VAULT / DRAWER -->
-          <section data-view-root="vault" style="display:none">
-            <div class="section">
-              <div class="box">
-                <div class="box-head"><h4><span class="icon">✎</span> Your drawer — saved cards</h4><span class="micro-badge" id="vaultCount">0 saved</span></div>
-                <div class="box-body" id="vaultBody">
-                  <div class="empty"><div class="emoji">—</div><b>Empty drawer</b><p>Tap ✎ on a card to save it here. It stays even offline.</p></div>
-                </div>
-              </div>
-              <div class="box">
-                <div class="box-head"><h4><span class="icon">◐</span> How the filing works</h4></div>
-                <div class="box-body">
-                  <div class="box-grid">
-                    <div class="kv"><label>Paper</label><b>Dexie.js (IndexedDB)</b><span>Filed locally, like index cards</span></div>
-                    <div class="kv"><label>Search</label><b>Fuse.js</b><span>Forgives typos, finds fast</span></div>
-                    <div class="kv"><label>Sync</label><b>Service Worker</b><span>Re-files when online</span></div>
-                    <div class="kv"><label>Images</label><b>WebP cache</b><span>Compressed for offline</span></div>
-                  </div>
-                  <div style="display:flex;gap:8px;margin-top:10px">
-                    <button class="btn btn-ghost" id="exportVault" style="flex:1">Export • JSON</button>
-                    <button class="btn btn-ghost" id="clearVault" style="flex:1">Empty drawer</button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
-        </main>
-
-        <div class="compare-bar" id="stickyCompareBar" style="display:none">
-          <div style="display:flex;align-items:center;gap:10px">
-            <b style="font-family:var(--font-mono);font-size:11px">≈ <span id="stickyCount">0</span>/4</b>
-            <div class="compare-tray" id="stickyTray"></div>
-          </div>
-          <button class="btn btn-primary" id="stickyGoCompare" style="padding:8px 12px;font-size:11px">Compare →</button>
-        </div>
-
-        <div class="home-indicator"></div>
+<!-- Top Bar -->
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="#" onclick="location.reload();return false">
+      <div class="brand-mark">A</div>
+      <div class="brand-text">
+        <strong>AetherPhone</strong>
+        <span>DB — 12 devices • Offline</span>
       </div>
+    </a>
+
+    <div class="search-wrap">
+      <span class="search-icon">⌕</span>
+      <input id="searchInput" placeholder="Search — try titanium, 1-inch, SD 8 Gen 3" autocomplete="off" spellcheck="false" />
+      <kbd class="search-kbd">/</kbd>
     </div>
 
-    <div class="side-info" style="flex:1;max-width:520px;display:none" id="sideInfo">
-      <div class="box" style="margin:0; transform:rotate(0.3deg)">
-        <div class="box-head"><h4>About this desk</h4></div>
-        <div class="box-body">
-          <p style="font-family:var(--font-body);line-height:1.65;font-size:13px;margin:0 0 10px">This is a <strong>reading room</strong>, not a store. Every phone is measured like a book — spine, margins, paper stock, type. We note the vapor chamber in mm², the PWM flicker, the DAC chip, the throttling curve. Someone filed these by hand.</p>
-          <div class="badge-row"><span class="micro-badge accent">Printed • 2024</span><span class="micro-badge">Hand-set type</span><span class="micro-badge success">Offline • File cards</span></div>
-          <div style="margin-top:12px; font-family:var(--font-mono); font-size:10px; color:var(--muted); border-top:1.5px dashed var(--line); padding-top:10px">Curated by M. — Archive No. 047 — All measurements in mm, nits, TOPS</div>
-        </div>
-      </div>
+    <div class="topbar-actions">
+      <span class="status" id="offlinePill">Offline ready</span>
+      <button class="icon-btn" id="themeToggle" title="Theme">◐</button>
+      <button class="icon-btn" id="vaultBtn" title="Saved">☆<span id="vaultCountTop" style="font-size:11px;margin-left:2px">0</span></button>
     </div>
   </div>
+</header>
+
+<div class="layout">
+  <!-- Sidebar — desktop / bottom nav on mobile -->
+  <aside class="sidebar">
+    <nav class="nav" id="appNav">
+      <button class="nav-btn active" data-view="discover">Index</button>
+      <button class="nav-btn" data-view="catalog">Catalog <span class="nav-count" id="countPill">12</span></button>
+      <button class="nav-btn" data-view="compare">Compare <span class="nav-count" id="compareCount">0</span></button>
+      <button class="nav-btn" data-view="tools">Lab</button>
+      <button class="nav-btn" data-view="vault">Saved</button>
+    </nav>
+    <div class="sidebar-foot">
+      <div class="mono" style="font-size:11px;color:var(--muted);line-height:1.5">
+        Offline-first<br/>
+        Dexie • Fuse • SW<br/>
+        <span id="swStatus" style="color:var(--muted)">Syncing…</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main" id="appMain">
+    <!-- DISCOVER -->
+    <section data-view-root="discover">
+      <div class="hero">
+        <div class="hero-left">
+          <div class="eyebrow">THE PHONE ENCYCLOPEDIA — EST. 2024</div>
+          <h1>Every phone,<br/>filed.</h1>
+          <p>240+ specs per device. Display substrate, PWM, vapor chamber, DAC, SAR — not marketing. Offline, fast, minimal.</p>
+          <div class="hero-actions">
+            <button class="btn btn-primary" id="ctaExplore">Open catalog →</button>
+            <button class="btn" id="ctaCompare">Compare</button>
+          </div>
+        </div>
+        <div class="hero-right">
+          <div class="hero-stats">
+            <div class="hstat"><b id="statDevices">12</b><span>Devices</span></div>
+            <div class="hstat"><b>240+</b><span>Fields</span></div>
+            <div class="hstat"><b>&lt;1ms</b><span>Search</span></div>
+            <div class="hstat"><b>100%</b><span>Offline</span></div>
+          </div>
+          <div class="hero-note">
+            <span>How it works</span>
+            <p>IndexedDB stores every spec. Fuse.js searches locally. Service Worker syncs deltas when online. No accounts.</p>
+            <div style="display:flex;gap:8px;margin-top:10px">
+              <button class="btn btn-small" id="btnSync">Sync</button>
+              <button class="btn btn-small btn-primary" id="btnAddMock">Add test device</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-head">
+          <h3>Featured</h3>
+          <button class="link" data-view-link="catalog">View all →</button>
+        </div>
+        <div class="grid" id="featuredGrid"></div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><h3>Browse</h3></div>
+        <div class="chips">
+          <button class="chip-btn" data-filter="Titanium">Titanium</button>
+          <button class="chip-btn" data-filter="1-inch">1-inch</button>
+          <button class="chip-btn" data-filter="Snapdragon 8 Gen 3">SD 8 Gen 3</button>
+          <button class="chip-btn" data-filter="Foldable">Foldable</button>
+          <button class="chip-btn" data-filter="Silicon-Carbon">Si-C</button>
+          <button class="chip-btn" data-filter="144Hz">144Hz+</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- CATALOG -->
+    <section data-view-root="catalog" style="display:none">
+      <div class="toolbar">
+        <div class="toolbar-left">
+          <label class="select">Brand
+            <select id="filterBrand"><option value="">All</option></select>
+          </label>
+          <label class="select">Tier
+            <select id="filterSegment"><option value="">All</option></select>
+          </label>
+          <label class="select">Sort
+            <select id="filterSort">
+              <option value="released-desc">Newest</option>
+              <option value="price-asc">Price ↑</option>
+              <option value="price-desc">Price ↓</option>
+              <option value="camera-desc">Camera</option>
+              <option value="antutu-desc">AnTuTu</option>
+            </select>
+          </label>
+        </div>
+        <button class="btn btn-small" id="clearFilters">Reset</button>
+      </div>
+      <div class="section" style="padding-top:12px">
+        <div class="grid" id="catalogGrid"></div>
+        <div class="empty" id="catalogEmpty" style="display:none">
+          <b>No results</b>
+          <p>Try another filter.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- DETAIL -->
+    <section data-view-root="detail" style="display:none">
+      <div id="detailRoot"></div>
+    </section>
+
+    <!-- COMPARE -->
+    <section data-view-root="compare" style="display:none">
+      <div class="page-head">
+        <h2>Compare</h2>
+        <button class="btn btn-small" id="clearCompare">Clear</button>
+      </div>
+      <div id="compareEmpty" class="empty">
+        <b>Select up to 4 devices</b>
+        <p>Tap + on any card.</p>
+        <button class="btn btn-primary" data-view-link="catalog" style="margin-top:10px">Open catalog</button>
+      </div>
+      <div id="compareContent" style="display:none">
+        <div class="compare-controls">
+          <label><input type="checkbox" id="highlightDiff" checked /> Highlight diff</label>
+          <label><input type="checkbox" id="showWinner" checked /> Show winner</label>
+        </div>
+        <div class="weights">
+          <div class="weight-row"><label>Performance</label><input type="range" id="wPerf" min="0" max="100" value="30" /><span id="wPerfVal">30%</span></div>
+          <div class="weight-row"><label>Camera</label><input type="range" id="wCam" min="0" max="100" value="30" /><span id="wCamVal">30%</span></div>
+          <div class="weight-row"><label>Battery</label><input type="range" id="wBatt" min="0" max="100" value="20" /><span id="wBattVal">20%</span></div>
+          <div class="weight-row"><label>Display</label><input type="range" id="wDisp" min="0" max="100" value="20" /><span id="wDispVal">20%</span></div>
+        </div>
+        <div id="compareMatrix" class="compare-matrix"></div>
+        <div id="compareScores" style="margin-top:12px"></div>
+      </div>
+    </section>
+
+    <!-- LAB / TOOLS -->
+    <section data-view-root="tools" style="display:none">
+      <div class="page-head">
+        <h2>Lab</h2>
+        <span class="mono" style="color:var(--muted);font-size:12px">Benchmarks • Battery • Sensor • Value</span>
+      </div>
+
+      <div class="tool-grid">
+        <div class="tool-card">
+          <h3>Benchmark radar</h3>
+          <p>AnTuTu, Geekbench, 3DMark and efficiency, plotted.</p>
+          <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+            <select id="radarA" class="select"><option value="s24-ultra">S24 Ultra</option><option value="iphone-15-pro-max">15 Pro Max</option><option value="oneplus-12">OnePlus 12</option><option value="rog-phone-8-pro">ROG 8 Pro</option><option value="pixel-8-pro">Pixel 8 Pro</option><option value="xiaomi-14-ultra">14 Ultra</option></select>
+            <select id="radarB" class="select"><option value="iphone-15-pro-max">15 Pro Max</option><option value="s24-ultra">S24 Ultra</option><option value="pixel-8-pro">Pixel 8 Pro</option><option value="oneplus-12">OnePlus 12</option></select>
+          </div>
+          <div class="chart-wrap"><canvas id="radarCanvas" height="260"></canvas></div>
+          <div class="kpi-row" id="radarKpi"></div>
+        </div>
+
+        <div class="tool-card">
+          <h3>Battery estimator</h3>
+          <p>Set your day — screen, gaming, streaming — see endurance.</p>
+          <div class="range-group">
+            <label>Screen time <b id="bSotVal">6h</b></label><input type="range" id="bSot" min="1" max="14" value="6" />
+            <label>Gaming <b id="bGameVal">1h</b></label><input type="range" id="bGame" min="0" max="6" value="1" />
+            <label>Streaming <b id="bStreamVal">2h</b></label><input type="range" id="bStream" min="0" max="8" value="2" />
+            <label>Device <select id="bDevice" class="select" style="width:100%;margin-top:6px"><option value="s24-ultra">S24 Ultra • 5000 mAh</option><option value="iphone-15-pro-max">15 Pro Max • 4422 mAh</option><option value="oneplus-12">OnePlus 12 • 5400 mAh</option><option value="rog-phone-8-pro">ROG 8 Pro • 5500 mAh</option><option value="pixel-8-pro">Pixel 8 Pro • 5050 mAh</option><option value="nokia-3310-2017">Nokia 3310 • 1200 mAh</option></select></label>
+          </div>
+          <div class="kpi-row">
+            <div class="kpi"><b id="bEst">14.2h</b><span>Mixed use</span></div>
+            <div class="kpi"><b id="bDays">1.3d</b><span>Per charge</span></div>
+            <div class="kpi"><b id="bCycles">1600</b><span>Cycles</span></div>
+          </div>
+        </div>
+
+        <div class="tool-card">
+          <h3>Sensor scale</h3>
+          <p>True-to-scale vs full-frame 36×24 mm.</p>
+          <div class="sensor-viz">
+            <svg viewBox="0 0 400 260" id="sensorSvg"></svg>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">
+              <label class="select">A <select id="sensorA"></select></label>
+              <label class="select">B <select id="sensorB"></select></label>
+            </div>
+          </div>
+          <div class="kpi-row" id="sensorKpi"></div>
+        </div>
+
+        <div class="tool-card">
+          <h3>Value</h3>
+          <p>Performance per dollar, weighted by use.</p>
+          <div class="range-group">
+            <label>Budget <b id="budgetVal">$1000</b></label><input type="range" id="budget" min="50" max="2000" step="50" value="1000" />
+          </div>
+          <div id="valueList" style="display:flex;flex-direction:column;gap:8px;margin-top:10px"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- VAULT -->
+    <section data-view-root="vault" style="display:none">
+      <div class="page-head">
+        <h2>Saved</h2>
+        <span class="mono" id="vaultCount" style="color:var(--muted);font-size:12px">0 saved</span>
+      </div>
+      <div id="vaultBody"></div>
+      <div class="card" style="margin-top:12px;padding:14px">
+        <h3 style="margin:0 0 6px;font-size:13px">Offline</h3>
+        <p style="margin:0;color:var(--muted);font-size:13px;line-height:1.5">Dexie (IndexedDB) + Fuse.js + Service Worker. All specs on-device.</p>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button class="btn btn-small" id="exportVault" style="flex:1">Export JSON</button>
+          <button class="btn btn-small" id="clearVault" style="flex:1">Clear</button>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- Sticky compare bar -->
+<div class="compare-bar" id="stickyCompareBar" style="display:none">
+  <div style="display:flex;align-items:center;gap:10px">
+    <b style="font-size:12px">Compare <span id="stickyCount">0</span>/4</b>
+    <div class="compare-tray" id="stickyTray"></div>
+  </div>
+  <button class="btn btn-primary" id="stickyGoCompare" style="padding:8px 12px;font-size:12px">Compare →</button>
 </div>
 
 <script type="module" src="/src/main.js"></script>

@@ -4,7 +4,7 @@ Chart.register(...registerables);
 import { db, initDB, toggleFavorite, getFavorites, toggleCompare, getCompareIds, clearCompare } from './db/index.js';
 import { phones, brands, priceSegments } from './data/phones.js';
 
-// ---------- Frame Wrapper Controls ----------
+// ---------- Frame Wrapper Controls (removed — responsive layout) ----------
 const phoneFrame = document.getElementById('phoneFrame');
 const deviceShell = document.getElementById('deviceShell');
 const bezelSeg = document.getElementById('bezelSeg');
@@ -15,21 +15,24 @@ const toggleFrameBtn = document.getElementById('toggleFrame');
 const frameToolbar = document.getElementById('frameToolbar');
 const sideInfo = document.getElementById('sideInfo');
 
-bezelSeg.addEventListener('click', e=>{
+if(bezelSeg) bezelSeg.addEventListener('click', e=>{
   if(e.target.tagName!=='BUTTON') return;
   bezelSeg.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
   e.target.classList.add('active');
+  if(!phoneFrame) return;
   if(e.target.dataset.bezel==='android') phoneFrame.classList.add('android');
   else phoneFrame.classList.remove('android');
 });
-notchSeg.addEventListener('click', e=>{
+if(notchSeg) notchSeg.addEventListener('click', e=>{
   if(e.target.tagName!=='BUTTON') return;
   notchSeg.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
   e.target.classList.add('active');
+  if(!phoneFrame) return;
   if(e.target.dataset.notch==='punch') phoneFrame.classList.add('punch');
   else phoneFrame.classList.remove('punch');
 });
-deviceSelect.addEventListener('change', ()=>{
+if(deviceSelect) deviceSelect.addEventListener('change', ()=>{
+  if(!phoneFrame) return;
   const v=deviceSelect.value;
   if(v.endsWith('landscape')) phoneFrame.classList.add('landscape');
   else phoneFrame.classList.remove('landscape');
@@ -45,25 +48,31 @@ deviceSelect.addEventListener('change', ()=>{
     phoneFrame.style.width='844px';phoneFrame.style.minWidth='844px';phoneFrame.style.height='390px';phoneFrame.style.minHeight='390px';
   }
 });
-zoomSeg.addEventListener('click', e=>{
+if(zoomSeg) zoomSeg.addEventListener('click', e=>{
   if(e.target.tagName!=='BUTTON') return;
   zoomSeg.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
   e.target.classList.add('active');
+  if(!phoneFrame) return;
   phoneFrame.classList.remove('zoom-90','zoom-75');
   if(e.target.dataset.zoom==='90') phoneFrame.classList.add('zoom-90');
   if(e.target.dataset.zoom==='75') phoneFrame.classList.add('zoom-75');
 });
 let frameHidden=false;
-toggleFrameBtn.addEventListener('click', ()=>{
+if(toggleFrameBtn) toggleFrameBtn.addEventListener('click', ()=>{
   frameHidden=!frameHidden;
-  deviceShell.classList.toggle('no-frame', frameHidden);
+  if(deviceShell) deviceShell.classList.toggle('no-frame', frameHidden);
   toggleFrameBtn.textContent = frameHidden ? 'Show Frame ▣' : 'Hide Frame 📱';
-  sideInfo.style.display = frameHidden ? 'block' : 'none';
-  if(frameHidden) frameToolbar.querySelector('.frame-hint').textContent='Desktop mode — responsive 1280px';
-  else frameToolbar.querySelector('.frame-hint').innerHTML='<span class="dot"></span> Live Preview • <span id="offlineHint">Online</span> • Tap frame to interact';
+  if(sideInfo) sideInfo.style.display = frameHidden ? 'block' : 'none';
+  if(frameToolbar){
+    const hint=frameToolbar.querySelector('.frame-hint');
+    if(hint){
+      if(frameHidden) hint.textContent='Desktop mode — responsive 1280px';
+      else hint.innerHTML='<span class="dot"></span> Live Preview • <span id="offlineHint">Online</span> • Tap frame to interact';
+    }
+  }
 });
 
-// live clock
+// live clock — optional (no status bar in minimal layout)
 function tickClock(){
   const now=new Date();
   const t=now.toLocaleTimeString([], {hour:'numeric', minute:'2-digit'});
@@ -72,16 +81,16 @@ function tickClock(){
 }
 setInterval(tickClock, 1000); tickClock();
 
-// theme — paper (default) vs ink (dark)
+// theme — light vs dark
 const themeToggle=document.getElementById('themeToggle');
-let theme=localStorage.getItem('aether-theme')||'paper';
+let theme=localStorage.getItem('aether-theme')||'light';
 function applyTheme(t){
-  document.documentElement.setAttribute('data-theme', t==='ink'?'ink':'');
-  themeToggle.textContent=t==='ink'?'☀️':'◐';
+  document.documentElement.setAttribute('data-theme', t==='dark'?'dark':'');
+  themeToggle.textContent=t==='dark'?'☀️':'◐';
   localStorage.setItem('aether-theme', t);
 }
 applyTheme(theme);
-themeToggle.addEventListener('click', ()=>{ theme=theme==='paper'?'ink':'paper'; applyTheme(theme);});
+if(themeToggle) themeToggle.addEventListener('click', ()=>{ theme=theme==='light'?'dark':'light'; applyTheme(theme);});
 
 // toast
 function toast(msg){
