@@ -10,12 +10,19 @@ export interface MetaRow {
 export class AetherDB extends Dexie {
   devices!: Table<Device, string>;
   meta!: Table<MetaRow, MetaRow['key']>;
+  /** Phones saved by the browser extension. Kept apart from `devices`, which catalog sync replaces. */
+  saved!: Table<Device, string>;
 
   constructor(name = 'aetherphone') {
     super(name);
     this.version(1).stores({
       devices: 'id, brand, year',
       meta: 'key',
+    });
+    this.version(2).stores({
+      devices: 'id, brand, year',
+      meta: 'key',
+      saved: 'id, brand',
     });
   }
 }

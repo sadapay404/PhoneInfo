@@ -2,15 +2,17 @@ import { useMemo, useState } from 'react';
 import type { Device } from '../data/types';
 import { Box } from '../components/Box';
 import { estimateEndurance, pointsPer100Usd, sensorGeometry } from '../lib/estimators';
+import { SavedPhones } from '../components/SavedPhones';
 
-type ToolId = 'battery' | 'sensor' | 'value';
+type ToolId = 'battery' | 'sensor' | 'value' | 'saved';
 const TOOLS: { id: ToolId; label: string; blurb: string }[] = [
+  { id: 'saved', label: 'Saved phones', blurb: 'Import phones saved from GSMArena with the browser extension.' },
   { id: 'battery', label: 'Battery endurance', blurb: 'Estimate screen-on time for your usage.' },
   { id: 'sensor', label: 'Camera sensor size', blurb: 'Main sensors drawn to the same scale.' },
   { id: 'value', label: 'Value per dollar', blurb: 'Benchmark points per $100 of price.' },
 ];
 
-export function Tools({ devices }: { devices: Device[] }) {
+export function Tools({ devices, onOpen }: { devices: Device[]; onOpen: (id: string) => void }) {
   const [tool, setTool] = useState<ToolId>('battery');
   const current = TOOLS.find((t) => t.id === tool)!;
   return (
@@ -29,6 +31,7 @@ export function Tools({ devices }: { devices: Device[] }) {
       {tool === 'battery' && <BatteryTool devices={devices} />}
       {tool === 'sensor' && <SensorTool devices={devices} />}
       {tool === 'value' && <ValueTool devices={devices} />}
+      {tool === 'saved' && <SavedPhones onOpen={onOpen} />}
     </div>
   );
 }

@@ -95,3 +95,25 @@ src/
   components/       Shell, FilterPanel, DeviceImage, Box, Icon
   views/            Finder, Detail, Compare, Tools
 ```
+
+## Save phones from GSMArena in your browser (no server)
+
+The `extension/` folder is a Chrome/Edge extension. It runs entirely in your browser, with no
+server and no data sent anywhere.
+
+1. Open a phone page on gsmarena.com (any page with a spec table).
+2. Click **Save to AetherPhone** (bottom right). The page is read, its photo is copied in,
+   and the phone is stored in the extension.
+3. Click the extension icon, then **Export JSON** to download `aetherphone-saved.json`.
+4. In the app, open **Tools → Saved phones** and **Import JSON**. Saved phones appear in
+   PhoneFinder and work offline on that device.
+
+Notes:
+- Saved data stays on your device. Do not publish it or commit it to git.
+- Browser storage is per site. Import in the same origin you run the app from (for
+  example `localhost:3000`, not the Cloud Shell preview URL).
+- The field mapping is written against the GSMArena table layout. Check a saved phone's
+  **Full spec sheet** against the source page once, and report any mismatch.
+
+Install: open `chrome://extensions`, turn on Developer mode, click **Load unpacked**, and
+choose the `extension` folder. Run its tests with `node --test extension/test/extension.check.mjs`.

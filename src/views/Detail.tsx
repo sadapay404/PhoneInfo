@@ -81,6 +81,25 @@ export function Detail({ device, all, inCompare, onBack, onToggleCompare }: {
           );
         })}
       </div>
+
+      {device.raw_specs && (
+        <section className="raw-specs">
+          <h2>Full spec sheet</h2>
+          <p className="muted small">As saved from the source page, for personal offline use.</p>
+          <div className="raw-grid">
+            {Object.entries(device.raw_specs).map(([cat, rows]) => (
+              <div key={cat} className="raw-cat">
+                <h3>{cat}</h3>
+                <dl>
+                  {Object.entries(rows).map(([label, value]) => (
+                    <div key={label}><dt>{label}</dt><dd>{value}</dd></div>
+                  ))}
+                </dl>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 }

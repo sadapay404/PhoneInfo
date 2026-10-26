@@ -1,0 +1,143 @@
+[
+  {
+    "id": "saved-99999",
+    "brand": "Acme",
+    "model": "Nova 9 Pro Max",
+    "year": 2024,
+    "status": "released",
+    "body": {
+      "weight_g": 205,
+      "dimensions_mm": [
+        180.5,
+        80.2,
+        8.1
+      ],
+      "ip_rating": "IP68"
+    },
+    "display": {
+      "type": "AMOLED, 120Hz, HDR10+, 1200 nits (typ), 2400 nits (HBM)",
+      "size_in": 6.6,
+      "resolution": [
+        1080,
+        2400
+      ],
+      "ppi": 400,
+      "refresh_hz_max": 120,
+      "peak_nits": 2400,
+      "glass": "Armor glass",
+      "panel_tech": "OLED"
+    },
+    "soc": {
+      "chipset": "Acme Silicon X2",
+      "process_nm": 4,
+      "cpu": "Octa-core (1x3.2 GHz + 3x2.8 GHz + 4x2.0 GHz)",
+      "gpu": "Acme GPU 9",
+      "ram_gb": 8,
+      "storage_gb": [
+        128,
+        256,
+        512
+      ]
+    },
+    "camera": {
+      "ultrawide": {
+        "mp": 50,
+        "aperture": "f/1.7",
+        "focal_mm": 24,
+        "ois": "sensor-shift"
+      },
+      "main": {},
+      "front": {
+        "mp": 32,
+        "aperture": "f/2.0"
+      }
+    },
+    "memory": {},
+    "audio": {
+      "stereo_speakers": true
+    },
+    "connectivity": {
+      "wifi": "Wi-Fi 802.11 a/b/g/n/ac/ax, dual-band, hotspot",
+      "bluetooth": "5.4, A2DP, LE",
+      "nfc": true,
+      "ir_blaster": true
+    },
+    "battery": {
+      "capacity_mah": 5000,
+      "chemistry": "Li-Po",
+      "wired_w": 65,
+      "wireless_w": 50,
+      "reverse_w": 5
+    },
+    "software": {
+      "launch_os": "Android 14, up to 16",
+      "os_family": "Android"
+    },
+    "repair": {
+      "sar_head_eu_wkg": 0.45,
+      "sar_body_eu_wkg": 0.62,
+      "sar_head_us_wkg": 0.7,
+      "sar_body_us_wkg": 1.1
+    },
+    "source_url": "https://www.gsmarena.com/acme_nova_9_pro_max-99999.php",
+    "source_note": "Saved from GSMArena for personal offline use on 2026-10-26",
+    "raw_specs": {
+      "Launch": {
+        "Announced": "2024, March 5",
+        "Status": "Available. Released 2024, March 20"
+      },
+      "Body": {
+        "Dimensions": "180.5 x 80.2 x 8.1 mm (7.11 x 3.16 x 0.32 in)",
+        "Weight": "205 g (7.23 oz)",
+        "Build": "Glass front, plastic back, aluminum frame",
+        "Details": "IP68 dust tight and water resistant"
+      },
+      "Display": {
+        "Type": "AMOLED, 120Hz, HDR10+, 1200 nits (typ), 2400 nits (HBM)",
+        "Size": "6.6 inches, 105.0 cm2",
+        "Resolution": "1080 x 2400 pixels, 20:9 ratio (~400 ppi density)",
+        "Protection": "Armor glass"
+      },
+      "Platform": {
+        "OS": "Android 14, up to 16",
+        "Chipset": "Acme Silicon X2 (4 nm)",
+        "CPU": "Octa-core (1x3.2 GHz + 3x2.8 GHz + 4x2.0 GHz)",
+        "GPU": "Acme GPU 9"
+      },
+      "Memory": {
+        "Card slot": "No",
+        "Internal": "128GB 8GB RAM, 256GB 12GB RAM, 512GB 12GB RAM"
+      },
+      "Main Camera": {
+        "Triple": "50 MP, f/1.7, 24mm (wide), 1/1.56\", 1.0µm, PDAF, sensor-shift OIS · * * * · 64 MP, f/2.6, 70mm (telephoto), 1/1.72\", 0.8µm, PDAF, 3x optical zoom · * * * · 12 MP, f/2.2, 14mm, 120˚ (ultrawide), 1/2.8\", 1.12µm, PDAF",
+        "Features": "LED flash, HDR",
+        "Video": "4K@30/60fps, 1080p@30/60/120fps"
+      },
+      "Selfie camera": {
+        "Single": "32 MP, f/2.0, 26mm (wide), 1/2.8\", 0.8µm, PDAF"
+      },
+      "Sound": {
+        "Loudspeaker": "Yes, with stereo speakers"
+      },
+      "Comms": {
+        "WLAN": "Wi-Fi 802.11 a/b/g/n/ac/ax, dual-band, hotspot",
+        "Bluetooth": "5.4, A2DP, LE",
+        "NFC": "Yes",
+        "USB": "USB Type-C 3.2"
+      },
+      "Features": {
+        "Sensors": "Fingerprint (under display), accelerometer, gyro, proximity",
+        "Details": "Infrared port"
+      },
+      "Battery": {
+        "Type": "Li-Po 5000 mAh",
+        "Charging": "Wired, 65W, 50% in 18 min · * * * · 50W wireless · * * * · 5W reverse wired"
+      },
+      "Misc": {
+        "Colors": "Black, Silver, Green",
+        "SAR": "0.70 W/kg (head) 1.10 W/kg (body)",
+        "SAR EU": "0.45 W/kg (head) 0.62 W/kg (body)"
+      }
+    }
+  }
+]

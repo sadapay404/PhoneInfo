@@ -1,0 +1,18 @@
+{
+  "manifest_version": 3,
+  "name": "AetherPhone Saver",
+  "version": "0.1.0",
+  "description": "Save a GSMArena phone page to your own AetherPhone library, for personal offline use.",
+  "permissions": ["storage", "unlimitedStorage"],
+  "content_scripts": [
+    {
+      "matches": ["https://www.gsmarena.com/*"],
+      "js": ["extract.js", "mapper.js", "content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_title": "AetherPhone Saver",
+    "default_popup": "popup.html"
+  }
+}

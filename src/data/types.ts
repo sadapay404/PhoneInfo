@@ -108,6 +108,8 @@ export interface Device {
   image?: string;
   /** Free-form provenance note, shown in the device header. */
   source_note?: string;
+  /** Full spec sheet as saved from a page: category -> label -> value. Shown on the detail page. */
+  raw_specs?: Record<string, Record<string, string>>;
 }
 
 export type Category =

@@ -123,7 +123,7 @@ export function App() {
   } else if (route.view === 'compare') {
     page = <Compare devices={catalog.devices} selectedIds={compareIds} onChange={setCompareIds} onOpen={(id) => go(`device/${id}`)} />;
   } else if (route.view === 'tools') {
-    page = <Tools devices={catalog.devices} />;
+    page = <Tools devices={catalog.devices} onOpen={(id) => go(`device/${id}`)} />;
   } else {
     page = (
       <Finder

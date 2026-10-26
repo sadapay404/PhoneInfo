@@ -15,10 +15,12 @@ function hueFor(text: string): number {
  */
 export function DeviceImage({ device, className = '', eager = false }: { device: Device; className?: string; eager?: boolean }) {
   if (device.image) {
+    // Saved phones carry their photo inline as a data: URL; catalog phones use a file path.
+    const src = device.image.startsWith('data:') ? device.image : `${BASE}catalog/${device.image}`;
     return (
       <img
         className={`device-img ${className}`}
-        src={`${BASE}catalog/${device.image}`}
+        src={src}
         alt={`${device.brand} ${device.model}`}
         loading={eager ? 'eager' : 'lazy'}
         decoding="async"
