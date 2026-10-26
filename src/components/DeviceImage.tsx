@@ -33,7 +33,7 @@ export function DeviceImage({ device, className = '', eager = false }: { device:
         <rect x="11" y="10" width="38" height="80" rx="3" fill="currentColor" opacity=".12" />
         <circle cx="30" cy="99" r="3" fill="currentColor" opacity=".35" />
       </svg>
-      <span className="placeholder-initials">{device.brand.slice(0, 2).toUpperCase()}</span>
+      <span className="placeholder-name"><small>{device.brand}</small>{device.model}</span>
     </div>
   );
 }

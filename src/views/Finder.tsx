@@ -110,12 +110,13 @@ export function Finder({ results, total, filters, onFilters, query, onQuery, fac
                     </div>
                     <div className="phone-card-body">
                       <span className="eyebrow">{d.brand} · {d.year}</span>
-                      <h3>{d.model}</h3>
-                      <ul className="kv">
-                        <li><span>Battery</span><strong>{d.battery.capacity_mah ? `${d.battery.capacity_mah.toLocaleString()} mAh` : '—'}</strong></li>
-                        <li><span>Screen</span><strong>{d.display.size_in ? `${d.display.size_in}″ · ${d.display.refresh_hz_max ?? '—'} Hz` : '—'}</strong></li>
-                        <li><span>Chip</span><strong>{d.soc.chipset ?? '—'}</strong></li>
-                      </ul>
+                      <h3 title={d.model}>{d.model}</h3>
+                      <dl className="stat-row">
+                        <div><dt>Battery</dt><dd>{d.battery.capacity_mah ? `${(d.battery.capacity_mah / 1000).toFixed(1)}k` : '—'}<small>mAh</small></dd></div>
+                        <div><dt>Screen</dt><dd>{d.display.size_in ? d.display.size_in.toFixed(1) : '—'}<small className="hz">″{d.display.refresh_hz_max ? ` · ${d.display.refresh_hz_max} Hz` : ''}</small></dd></div>
+                        <div><dt>RAM</dt><dd>{d.soc.ram_gb ?? '—'}<small>{d.soc.ram_gb ? 'GB' : ''}</small></dd></div>
+                      </dl>
+                      <p className="chip-line" title={d.soc.chipset ?? ''}>{d.soc.chipset ?? 'Chipset unknown'}</p>
                     </div>
                   </button>
                   <button className={`compare-toggle ${inCompare ? 'on' : ''}`} onClick={() => onToggleCompare(d.id)} aria-pressed={inCompare} disabled={!inCompare && compareIds.length >= MAX_COMPARE}>
