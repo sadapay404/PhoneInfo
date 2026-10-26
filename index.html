@@ -27,6 +27,7 @@
       <span class="search-icon">⌕</span>
       <input id="searchInput" placeholder="Search — titanium, 1-inch, SD 8 Gen 3" autocomplete="off" spellcheck="false" />
       <kbd class="search-kbd">/</kbd>
+      <div id="autocomplete" class="autocomplete"></div>
     </div>
 
     <div class="topbar-actions">
@@ -48,9 +49,11 @@
       <button class="nav-btn active" data-view="discover">Index</button>
       <button class="nav-btn" data-view="catalog">Catalog <span class="nav-count" id="countPill">12</span></button>
       <button class="nav-btn" data-view="finder">Finder <span class="nav-count" id="finderCountNav">—</span></button>
+      <button class="nav-btn" data-view="brands">Brands</button>
       <button class="nav-btn" data-view="compare">Compare <span class="nav-count" id="compareCount">0</span></button>
       <button class="nav-btn" data-view="tools">Lab</button>
       <button class="nav-btn" data-view="vault">Saved</button>
+      <button class="nav-btn" data-view="glossary">Glossary</button>
     </nav>
     <div class="sidebar-foot">
       <div class="mono" style="font-size:11px;color:var(--muted);line-height:1.5">
@@ -111,6 +114,21 @@
           <button class="chip-btn" data-filter="Silicon-Carbon">Si-C</button>
           <button class="chip-btn" data-filter="144Hz">144Hz+</button>
         </div>
+      </div>
+
+      <div class="section" id="trendingSection">
+        <div class="section-head"><h3>Trending this week</h3><span class="mono" style="font-size:11px;color:var(--muted)">by views</span></div>
+        <div class="grid" id="trendingGrid"></div>
+      </div>
+
+      <div class="section" id="recentlyViewedSection" style="display:none">
+        <div class="section-head"><h3>Recently viewed</h3><button class="link" id="clearHistory">Clear</button></div>
+        <div class="grid" id="recentlyGrid"></div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><h3>Brands</h3><button class="link" data-view-link="brands">All brands →</button></div>
+        <div id="brandPreview" class="brand-preview"></div>
       </div>
     </section>
 
@@ -272,6 +290,27 @@
           <div class="empty" id="finderEmpty" style="display:none"><b>No phones match</b><p>Loosen a filter — try lowering price or removing 5G.</p></div>
         </div>
       </div>
+    </section>
+
+    <!-- BRANDS -->
+    <section data-view-root="brands" style="display:none">
+      <div class="page-head">
+        <h2>Brands</h2>
+        <span class="mono" style="color:var(--muted);font-size:12px" id="brandStats">—</span>
+      </div>
+      <div class="brand-grid" id="brandGrid"></div>
+    </section>
+
+    <!-- GLOSSARY -->
+    <section data-view-root="glossary" style="display:none">
+      <div class="page-head">
+        <h2>Glossary</h2>
+        <span class="mono" style="color:var(--muted);font-size:12px">Specs explained — no jargon</span>
+      </div>
+      <div class="glossary-search">
+        <input id="glossarySearch" placeholder="Search term — LTPO, PWM, UWB..." />
+      </div>
+      <div id="glossaryGrid" class="glossary-grid"></div>
     </section>
 
     <!-- DETAIL -->

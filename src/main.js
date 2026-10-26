@@ -174,6 +174,12 @@ async function boot(){
   }
   renderFeatured();
   renderCatalog();
+  renderTrending();
+  renderBrandPreview();
+  renderBrands();
+  renderHistory();
+  initAutocomplete();
+  initGlossary();
   updateCompareUI();
   refreshVault();
   initFinder();
@@ -181,6 +187,9 @@ async function boot(){
   initSensors();
   initValueCalc();
   updateOfflinePill();
+  // show vault count top
+  const vaultTop=document.getElementById('vaultCountTop');
+  if(vaultTop) getFavorites().then(f=> vaultTop.textContent=f.length);
 }
 boot();
 
@@ -349,7 +358,7 @@ async function openDetail(id, isRefresh=false){
   const p = allPhones.find(x=>x.id===id);
   if(!p) return;
   lastDetailId = id;
-  if(!isRefresh) showView('detail');
+  if(!isRefresh){ showView('detail'); pushHistory(id); }
   const favs = new Set((await db.favorites.toArray()).map(f=>f.id));
   const isFav=favs.has(id);
   const root=document.getElementById('detailRoot');
@@ -370,6 +379,41 @@ async function openDetail(id, isRefresh=false){
         <button class="btn btn-primary" id="detailCompare" style="flex:1">⚖ ${ (await getCompareIds()).includes(id) ? 'In Compare ✓' : 'Add to Compare'}</button>
         <button class="btn btn-ghost" id="detailFav" style="flex:1">${isFav?'♥ Saved':'♡ Save to Vault'}</button>
         <button class="btn btn-ghost" id="detailBack" style="padding:10px 14px">← Back</button>
+      </div>
+
+      <!-- Images & Colors -->
+      <div class="box">
+        <div class="box-head"><h4><span class="icon">◎</span> Images • ${p.images? p.images.length : 1} shots + ${p.colors? p.colors.length:0} colors</h4><span class="micro-badge">${p.views?.toLocaleString()||''} views</span></div>
+        <div class="box-body">
+          <div class="gallery" id="galleryMain">
+            ${(p.images||[p.image]).map((img,i)=>`<img src="${img}" data-idx="${i}" class="${i===0?'active':''}" style="width:100%;max-height:300px;object-fit:cover;border-radius:10px;border:1px solid var(--line)" />`).join('')}
+          </div>
+          <div class="gallery" style="margin-top:8px">
+            ${(p.images||[p.image]).map((img,i)=>`<img src="${img}" data-thumb="${i}" class="${i===0?'active':''}" style="cursor:pointer" />`).join('')}
+          </div>
+          ${p.colors? `<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center"><span class="mono" style="font-size:11px;color:var(--muted)">Colors:</span> ${p.colors.map(c=>`<span style="display:flex;align-items:center;gap:6px;font-size:12px"><span style="width:16px;height:16px;border-radius:50%;background:${c.hex};border:1.5px solid var(--line);display:inline-block"></span>${c.name}</span>`).join('')}</div>` : ''}
+          <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap"><span class="micro-badge">★ ${p.rating} rating</span><span class="micro-badge">${p.views?.toLocaleString()||0} views</span><button class="btn btn-small" id="shareBtn" style="margin-left:auto">Share link</button><button class="btn btn-small" id="exportSpec">Export PDF</button></div>
+        </div>
+      </div>
+
+      <!-- Deals -->
+      <div class="box">
+        <div class="box-head"><h4><span class="icon">₨</span> Where to buy — in ${getCurrency()} • ${p.deals? p.deals.length:0} offers</h4><span class="micro-badge accent">PKR & USD pinned</span></div>
+        <div class="box-body">
+          <div class="deals">
+            ${(p.deals||[]).map(d=>`
+              <div class="deal">
+                <div><b>${d.retailer}</b><div class="mono" style="font-size:11px;color:var(--muted)">${d.delivery} • ${d.inStock? 'In stock':'Out of stock'}</div></div>
+                <div style="text-align:right"><div class="price">${formatPrice(d.pricePKR/278.5, getCurrency())}</div><div class="mono" style="font-size:10px;color:var(--muted)">${d.inStock? 'Delivery 2d':'Notify'}</div></div>
+                <button class="btn btn-small ${d.inStock?'btn-primary':''}" ${d.inStock?'':'disabled'}>${d.inStock?'Visit →':'Alert'}</button>
+              </div>
+            `).join('') || `<div class="empty">No deals yet — ingestion daemon will add Daraz/PriceOye soon</div>`}
+          </div>
+          <div class="price-history" style="margin-top:10px">
+            <div class="mono" style="font-size:11px;color:var(--muted)">Price history (90d) — mock — lowest ${formatPrice(p.price.usd*0.92, getCurrency())}</div>
+            <svg viewBox="0 0 300 60" style="width:100%;height:60px;margin-top:6px"><polyline points="0,40 40,35 80,38 120,28 160,32 200,18 240,22 280,12" fill="none" stroke="var(--ink)" stroke-width="2" /></svg>
+          </div>
+        </div>
       </div>
 
       <!-- Modular Boxes -->
@@ -470,6 +514,27 @@ async function openDetail(id, isRefresh=false){
     const head=box.querySelector('.box-head');
     if(head) head.addEventListener('click', ()=> box.classList.toggle('collapsed'));
   });
+  // gallery thumbs
+  root.querySelectorAll('[data-thumb]').forEach(thumb=>{
+    thumb.addEventListener('click', ()=>{
+      const idx=thumb.getAttribute('data-thumb');
+      root.querySelectorAll('#galleryMain img').forEach((img,i)=> img.style.display = String(i)===idx ? 'block' : 'none');
+      root.querySelectorAll('[data-thumb]').forEach(t=> t.classList.remove('active'));
+      thumb.classList.add('active');
+    });
+  });
+  // share / export
+  const shareBtn=root.querySelector('#shareBtn');
+  if(shareBtn) shareBtn.addEventListener('click', async ()=>{
+    const url=`${location.origin}${location.pathname}#phone-${id}`;
+    try{ await navigator.clipboard.writeText(url); toast('Link copied'); } catch{ toast(url); }
+  });
+  const exportBtn=root.querySelector('#exportSpec');
+  if(exportBtn) exportBtn.addEventListener('click', ()=>{
+    const blob=new Blob([`AetherPhone Spec Sheet\n${p.brand} ${p.model}\nPrice: ${formatPrice(p.price.usd, getCurrency())}\nChipset: ${p.soc.chipset}\nDisplay: ${p.display.size}" ${p.display.type}\nCamera: ${p.camera.primary.mp}\nBattery: ${p.battery.capacity}mAh`], {type:'text/plain'});
+    const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=`${p.id}-spec.txt`; a.click(); URL.revokeObjectURL(url); toast('Spec exported');
+  });
+
   root.querySelector('#detailBack').addEventListener('click', ()=> showView('catalog'));
   root.querySelector('#detailFav').addEventListener('click', async ()=>{
     await toggleFavorite(id);
@@ -915,6 +980,123 @@ function initValueCalc(){
   }
   budget.addEventListener('input', render);
   render();
+}
+
+// ---------- History / Recently Viewed ----------
+function pushHistory(id){
+  const key='aether-history';
+  let arr=JSON.parse(localStorage.getItem(key)||'[]');
+  arr=arr.filter(x=>x!==id);
+  arr.unshift(id);
+  arr=arr.slice(0,12);
+  localStorage.setItem(key, JSON.stringify(arr));
+  localStorage.setItem('aether-last-viewed', id);
+  renderHistory();
+}
+function renderHistory(){
+  const sec=document.getElementById('recentlyViewedSection');
+  const grid=document.getElementById('recentlyGrid');
+  if(!sec||!grid) return;
+  const arr=JSON.parse(localStorage.getItem('aether-history')||'[]');
+  if(!arr.length){ sec.style.display='none'; return; }
+  sec.style.display='block';
+  const phonesHist=arr.map(id=> allPhones.find(p=>p.id===id)).filter(Boolean).slice(0,4);
+  grid.innerHTML=phonesHist.map(p=>cardHTML(p)).join('');
+  attachCardListeners(grid);
+}
+function clearHistory(){
+  localStorage.removeItem('aether-history');
+  renderHistory();
+}
+document.getElementById('clearHistory')?.addEventListener('click', clearHistory);
+
+// ---------- Autocomplete ----------
+function initAutocomplete(){
+  const input=document.getElementById('searchInput');
+  const box=document.getElementById('autocomplete');
+  if(!input||!box) return;
+  input.addEventListener('input', ()=>{
+    const q=input.value.trim().toLowerCase();
+    if(!q || q.length<1){ box.classList.remove('open'); box.innerHTML=''; return; }
+    const hits=fuse.search(q).slice(0,6).map(r=>r.item);
+    const brands=[...new Set(allPhones.map(p=>p.brand))].filter(b=>b.toLowerCase().includes(q)).slice(0,2);
+    let html='';
+    brands.forEach(b=> html+=`<div class="ac-item" data-brand="${b}"><span style="width:32px;height:32px;border-radius:8px;background:var(--bg2);display:grid;place-items:center;font-weight:800;border:1px solid var(--line)">${b[0]}</span><div><b>${b}</b> <span>— brand • ${allPhones.filter(p=>p.brand===b).length} phones</span></div></div>`);
+    hits.forEach(p=> html+=`<div class="ac-item" data-id="${p.id}"><img src="${p.image}" /><div><b>${p.brand} ${p.model}</b> <span>— ${p.soc.chipset} • ${p.display.size}"</span></div></div>`);
+    html+=`<div class="ac-foot">${hits.length} results — press Enter to search all • <span style="color:var(--ink)">Finder has 12 filters →</span></div>`;
+    box.innerHTML=html; box.classList.add('open');
+    box.querySelectorAll('[data-id]').forEach(el=> el.addEventListener('click', ()=>{ box.classList.remove('open'); openDetail(el.getAttribute('data-id')); }));
+    box.querySelectorAll('[data-brand]').forEach(el=> el.addEventListener('click', ()=>{ const b=el.getAttribute('data-brand'); input.value=b; box.classList.remove('open'); showView('catalog'); document.getElementById('filterBrand').value=b; renderCatalog(); }));
+  });
+  document.addEventListener('click', e=>{ if(!e.target.closest('.search-wrap')) box.classList.remove('open'); });
+  input.addEventListener('keydown', e=>{ if(e.key==='Enter'){ box.classList.remove('open'); } if(e.key==='/'){ e.preventDefault(); input.focus(); }});
+}
+
+// ---------- Trending ----------
+function renderTrending(){
+  const grid=document.getElementById('trendingGrid');
+  if(!grid) return;
+  const sorted=[...allPhones].sort((a,b)=> (b.views||0)-(a.views||0)).slice(0,4);
+  grid.innerHTML=sorted.map(p=>cardHTML(p)).join('');
+  attachCardListeners(grid);
+}
+
+// ---------- Brands ----------
+function renderBrandPreview(){
+  const wrap=document.getElementById('brandPreview');
+  if(!wrap) return;
+  const brands=[...new Set(allPhones.map(p=>p.brand))].sort().slice(0,10);
+  wrap.innerHTML=brands.map(b=>`<button class="brand-pill" data-brand="${b}">${b} <span style="color:var(--muted)">(${allPhones.filter(p=>p.brand===b).length})</span></button>`).join('');
+  wrap.querySelectorAll('[data-brand]').forEach(b=> b.addEventListener('click', ()=>{ document.getElementById('filterBrand').value=b.getAttribute('data-brand'); renderCatalog(); showView('catalog'); }));
+}
+function renderBrands(){
+  const grid=document.getElementById('brandGrid');
+  const stats=document.getElementById('brandStats');
+  if(!grid) return;
+  const map=new Map();
+  allPhones.forEach(p=>{ if(!map.has(p.brand)) map.set(p.brand,{count:0,totalUSD:0,phones:[]}); const m=map.get(p.brand); m.count++; m.totalUSD+=p.price.usd; m.phones.push(p); });
+  if(stats) stats.textContent=`${map.size} brands • ${allPhones.length} devices`;
+  const brands=[...map.entries()].sort((a,b)=> b[1].count-a[1].count);
+  grid.innerHTML=brands.map(([brand, data])=>`
+    <div class="brand-card" data-brand="${brand}">
+      <div style="display:flex;align-items:center;gap:10px"><div style="width:36px;height:36px;border-radius:10px;background:var(--ink);color:var(--bg);display:grid;place-items:center;font-weight:900">${brand[0]}</div><h3>${brand}</h3></div>
+      <p>${data.count} phones • Avg ${formatPrice(Math.round(data.totalUSD/data.count), getCurrency())} • ${data.phones.slice(0,3).map(p=>p.model).join(', ')}</p>
+      <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">${data.phones.slice(0,3).map(p=>`<span class="micro-badge">${p.model}</span>`).join('')}</div>
+    </div>
+  `).join('');
+  grid.querySelectorAll('.brand-card').forEach(el=> el.addEventListener('click', ()=>{ document.getElementById('filterBrand').value=el.getAttribute('data-brand'); renderCatalog(); showView('catalog'); }));
+}
+
+// ---------- Glossary ----------
+const glossaryData=[
+  {term:"LTPO", def:"Low-Temperature Polycrystalline Oxide — display backplane that varies refresh 1–120Hz to save power."},
+  {term:"PWM", def:"Pulse Width Modulation — how OLED dims. Low Hz (240) can cause eye strain, high Hz (1920+) is easier."},
+  {term:"UWB", def:"Ultra-Wideband — precise spatial tracking (AirTag, car key) via Qorvo/Broadcom chip."},
+  {term:"OIS vs EIS", def:"OIS moves lens/sensor hardware, EIS crops digitally. Best is gimbal + EIS combined."},
+  {term:"Silicon-Carbon", def:"Anode with silicon boosts capacity ~10% vs graphite Li-Po. Check cycles to 80%."},
+  {term:"Vapor Chamber", def:"Flat heat pipe in mm². Larger = sustained performance, less throttling."},
+  {term:"NPU TOPS", def:"Trillion Ops Per Second — AI accelerator, separate from CPU/GPU."},
+  {term:"SAR", def:"Specific Absorption Rate — Head/Body. EU limits 2.0 W/kg, US 1.6. Lower is not 'safer', just certified."},
+  {term:"Carrier Aggregation", def:"Combining bands (e.g., 4CA) for faster LTE/5G. Needs modem + carrier support."},
+  {term:"LDAC / aptX", def:"Bluetooth audio codecs. LDAC 990kbps, aptX Lossless 1Mbps — needs both phone+buds support."},
+  {term:"Gorilla Armor", def:"Corning's latest — anti-reflective + scratch. Reduces glare 75% vs Victus 2."},
+  {term:"Treble / GKI", def:"Project Treble separates vendor/OS. GKI = Generic Kernel Image for updates."},
+  {term:"SiP vs SoC", def:"System-on-Chip vs System-in-Package. Apple M uses SiP with unified memory."},
+  {term:"Periscope Zoom", def:"Prism folds light 90° for 5–10x optical in thin body. Check native focal mm."},
+  {term:"DC Dimming", def:"Reduces current not flicker vs PWM. DC-like 3Pulse is compromise."},
+  {term:"M13/E7 Substrate", def:"Samsung OLED material generation — affects efficiency, color, lifespan."}
+];
+function renderGlossary(filter=""){
+  const grid=document.getElementById('glossaryGrid');
+  if(!grid) return;
+  const q=filter.toLowerCase();
+  const filtered=q? glossaryData.filter(g=> g.term.toLowerCase().includes(q) || g.def.toLowerCase().includes(q)) : glossaryData;
+  grid.innerHTML=filtered.map(g=>`<div class="glossary-card"><dt>${g.term}</dt><dd>${g.def}</dd></div>`).join('') || `<div class="empty">No terms match “${filter}”</div>`;
+}
+function initGlossary(){
+  const inp=document.getElementById('glossarySearch');
+  if(inp) inp.addEventListener('input', ()=> renderGlossary(inp.value));
+  renderGlossary();
 }
 
 // ---------- Vault ----------
