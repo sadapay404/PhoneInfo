@@ -363,6 +363,51 @@ button{font:inherit}
 }
 .list-row img{width:48px;height:48px;border-radius:10px;object-fit:cover;border:1px solid var(--line)}
 
+/* Currency pill — pinned PKR+USD */
+.currency-pill{
+  display:flex;align-items:center;gap:6px;
+  background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:4px 8px;
+  font-family:'JetBrains Mono', monospace;font-size:11px;font-weight:600;
+}
+.currency-pill select{
+  background:transparent;border:none;color:var(--ink);font-weight:700;outline:none;font-size:11px;cursor:pointer;max-width:108px
+}
+
+/* Finder — GSMArena-beating */
+.finder-layout{
+  display:grid;grid-template-columns:300px 1fr;gap:16px;align-items:start;margin-top:12px;
+}
+@media(max-width:900px){
+  .finder-layout{grid-template-columns:1fr}
+}
+.finder-filters{
+  position:sticky;top:70px;max-height:calc(100vh - 80px);overflow:auto;
+  background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:12px;
+}
+@media(max-width:900px){
+  .finder-filters{position:static;max-height:none}
+}
+.f-group{
+  border:1px solid var(--line);border-radius:10px;background:var(--bg2);padding:10px;
+}
+.f-head{
+  font-size:11px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;color:var(--ink);display:flex;align-items:center;justify-content:space-between;gap:8px;
+  border-bottom:1px solid var(--line);padding-bottom:6px;margin-bottom:8px;
+}
+.f-hint{font-family:'JetBrains Mono', monospace;font-size:10px;color:var(--muted);font-weight:600;text-transform:none;letter-spacing:0}
+.f-field{font-size:12px;font-weight:600;color:var(--ink2);display:flex;flex-direction:column;gap:4px}
+.f-field input[type="number"], .f-field select{
+  border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:12px;background:var(--bg);color:var(--ink);width:100%;
+}
+.f-field input[type="range"]{accent-color:var(--ink)}
+.f-checks label{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:500;color:var(--ink2);margin-bottom:4px;cursor:pointer}
+.f-checks input{accent-color:var(--ink)}
+.f-mini{font-family:'JetBrains Mono', monospace;font-size:10px;color:var(--muted);margin-top:6px;line-height:1.4}
+.f-row{align-items:center}
+.finder-results{min-width:0}
+.finder-info{font-size:11px;color:var(--muted);background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+.finder-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+
 /* Toast */
 .toast{
   position:fixed;bottom:18px;left:50%;transform:translateX(-50%);

@@ -1,9 +1,9 @@
 import Dexie from 'dexie';
-import { phones } from '../data/phones.js';
+import { catalog } from '../data/catalog.js';
 
 export const db = new Dexie('AetherPhoneDB');
-db.version(1).stores({
-  phones: 'id, brand, model, released',
+db.version(2).stores({
+  phones: 'id, brand, model, released, brand, year',
   favorites: 'id',
   compare: 'id',
   meta: 'key'
@@ -11,15 +11,16 @@ db.version(1).stores({
 
 export async function initDB(){
   const count = await db.phones.count();
+  // Always sync to latest catalog (handles adds)
   if(count === 0){
-    await db.phones.bulkPut(phones);
-    await db.meta.put({key:'seedVersion', value:'1.0', updated: new Date().toISOString()});
-    await db.meta.put({key:'totalDevices', value: phones.length});
-  } else if(count !== phones.length){
-    // sync delta
-    await db.phones.bulkPut(phones);
+    await db.phones.bulkPut(catalog);
+    await db.meta.put({key:'seedVersion', value:'2.0', updated: new Date().toISOString()});
+    await db.meta.put({key:'totalDevices', value: catalog.length});
+  } else if(count !== catalog.length){
+    await db.phones.bulkPut(catalog);
+    await db.meta.put({key:'totalDevices', value: catalog.length});
   }
-  return count;
+  return await db.phones.count();
 }
 
 export async function getAllPhones(){

@@ -19,17 +19,21 @@
       <div class="brand-mark">A</div>
       <div class="brand-text">
         <strong>AetherPhone</strong>
-        <span>DB — 12 devices • Offline</span>
+        <span>DB — <span id="brandCount">0</span> devices • Offline</span>
       </div>
     </a>
 
     <div class="search-wrap">
       <span class="search-icon">⌕</span>
-      <input id="searchInput" placeholder="Search — try titanium, 1-inch, SD 8 Gen 3" autocomplete="off" spellcheck="false" />
+      <input id="searchInput" placeholder="Search — titanium, 1-inch, SD 8 Gen 3" autocomplete="off" spellcheck="false" />
       <kbd class="search-kbd">/</kbd>
     </div>
 
     <div class="topbar-actions">
+      <label class="currency-pill" title="Currency — PKR & USD pinned">
+        <span>◈</span>
+        <select id="currencySelect"></select>
+      </label>
       <span class="status" id="offlinePill">Offline ready</span>
       <button class="icon-btn" id="themeToggle" title="Theme">◐</button>
       <button class="icon-btn" id="vaultBtn" title="Saved">☆<span id="vaultCountTop" style="font-size:11px;margin-left:2px">0</span></button>
@@ -43,6 +47,7 @@
     <nav class="nav" id="appNav">
       <button class="nav-btn active" data-view="discover">Index</button>
       <button class="nav-btn" data-view="catalog">Catalog <span class="nav-count" id="countPill">12</span></button>
+      <button class="nav-btn" data-view="finder">Finder <span class="nav-count" id="finderCountNav">—</span></button>
       <button class="nav-btn" data-view="compare">Compare <span class="nav-count" id="compareCount">0</span></button>
       <button class="nav-btn" data-view="tools">Lab</button>
       <button class="nav-btn" data-view="vault">Saved</button>
@@ -136,6 +141,135 @@
         <div class="empty" id="catalogEmpty" style="display:none">
           <b>No results</b>
           <p>Try another filter.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- FINDER — GSMArena-beating, highly detailed -->
+    <section data-view-root="finder" style="display:none">
+      <div class="page-head">
+        <h2>Phone Finder <span class="mono" style="font-weight:400;color:var(--muted);font-size:12px">— Better than GSMArena</span></h2>
+        <div style="display:flex;gap:8px;align-items:center">
+          <span class="mono" id="finderCount" style="font-size:12px;color:var(--muted)">0 phones found</span>
+          <button class="btn btn-small" id="finderReset">Reset all</button>
+          <button class="btn btn-small btn-primary" id="finderSave">Save preset</button>
+        </div>
+      </div>
+
+      <div class="finder-layout">
+        <aside class="finder-filters" id="finderFilters">
+          <!-- Price + Currency -->
+          <div class="f-group">
+            <div class="f-head">Price <span class="f-hint" id="finderPriceHint">in selected currency</span></div>
+            <div class="f-row" style="display:flex;gap:8px">
+              <label class="f-field" style="flex:1">Min <input type="number" id="fPriceMin" placeholder="50" /></label>
+              <label class="f-field" style="flex:1">Max <input type="number" id="fPriceMax" placeholder="2500" /></label>
+            </div>
+            <div class="f-range">
+              <input type="range" id="fPriceMinR" min="50" max="2500" value="50" />
+              <input type="range" id="fPriceMaxR" min="50" max="2500" value="2500" />
+            </div>
+            <div class="f-mini">PKR & USD pinned to top of currency selector — all 160+ currencies available</div>
+          </div>
+
+          <!-- General -->
+          <div class="f-group">
+            <div class="f-head">General</div>
+            <div class="f-field">Brand — multi-select
+              <div id="fBrandChecks" class="f-checks" style="max-height:110px;overflow:auto;border:1px solid var(--line);border-radius:8px;padding:8px;margin-top:4px"></div>
+            </div>
+            <div class="f-row" style="display:flex;gap:8px;margin-top:8px">
+              <label class="f-field" style="flex:1">Year min <select id="fYearMin"></select></label>
+              <label class="f-field" style="flex:1">Year max <select id="fYearMax"></select></label>
+            </div>
+            <div class="f-row" style="margin-top:8px">
+              <label class="f-field" style="flex:1">Tier
+                <select id="fTier"><option value="">Any tier</option><option>Budget</option><option>Midrange</option><option>Premium</option><option>Ultra-Premium</option><option>Foldable</option><option>Gaming</option></select>
+              </label>
+            </div>
+          </div>
+
+          <!-- Body -->
+          <div class="f-group">
+            <div class="f-head">Body — Dimensions & Build</div>
+            <div class="f-row" style="display:flex;gap:8px">
+              <label class="f-field" style="flex:1">Weight ≤ <input type="range" id="fWeight" min="120" max="300" value="300" /> <span id="fWeightVal" class="mono">300g</span></label>
+            </div>
+            <div class="f-row" style="display:flex;gap:8px">
+              <label class="f-field" style="flex:1">Thickness ≤ <input type="range" id="fThickness" min="6" max="14" step="0.5" value="14" /> <span id="fThicknessVal" class="mono">14mm</span></label>
+            </div>
+            <label class="f-field">Waterproof
+              <select id="fWaterproof"><option value="">Any</option><option value="IP68">IP68</option><option value="IP67">IP67</option><option value="IPX8">IPX8</option><option value="No">No rating</option></select>
+            </label>
+            <label class="f-field" style="margin-top:6px"><input type="checkbox" id="fExpandable" /> Expandable storage (microSD)</label>
+          </div>
+
+          <!-- Network -->
+          <div class="f-group">
+            <div class="f-head">Network</div>
+            <label class="f-field"><input type="checkbox" id="f5G" /> 5G required</label>
+            <label class="f-field"><input type="checkbox" id="fNFC" /> NFC required</label>
+            <label class="f-field"><input type="checkbox" id="fIR" /> IR Blaster required</label>
+            <label class="f-field"><input type="checkbox" id="fUWB" /> UWB required</label>
+          </div>
+
+          <!-- Performance -->
+          <div class="f-group">
+            <div class="f-head">Performance — SoC & Memory</div>
+            <label class="f-field">Chipset vendor
+              <select id="fChipVendor"><option value="">Any</option><option>Qualcomm</option><option>MediaTek</option><option>Apple</option><option>Google</option><option>Samsung</option><option>Unisoc</option></select>
+            </label>
+            <div class="f-row" style="display:flex;gap:8px;margin-top:6px">
+              <label class="f-field" style="flex:1">RAM ≥ <select id="fRamMin"><option value="0">Any</option><option value="4">4GB</option><option value="6">6GB</option><option value="8">8GB</option><option value="12">12GB</option><option value="16">16GB</option><option value="24">24GB</option></select></label>
+              <label class="f-field" style="flex:1">Storage ≥ <select id="fStorageMin"><option value="0">Any</option><option value="64">64GB</option><option value="128">128GB</option><option value="256">256GB</option><option value="512">512GB</option><option value="1024">1TB</option></select></label>
+            </div>
+          </div>
+
+          <!-- Display -->
+          <div class="f-group">
+            <div class="f-head">Display</div>
+            <div class="f-row" style="display:flex;gap:8px">
+              <label class="f-field" style="flex:1">Size ≥ <select id="fDisplayMin"><option value="0">Any</option><option value="5.5">5.5"</option><option value="6.0">6.0"</option><option value="6.5">6.5"</option><option value="6.8">6.8"</option><option value="7.5">7.5"</option></select></label>
+              <label class="f-field" style="flex:1">Type
+                <select id="fDisplayType"><option value="">Any</option><option>AMOLED</option><option>LTPO AMOLED</option><option>OLED</option><option>IPS LCD</option><option>Foldable AMOLED</option></select>
+              </label>
+            </div>
+            <div class="f-row" style="display:flex;gap:8px;margin-top:6px">
+              <label class="f-field" style="flex:1">Refresh ≥ <select id="fRefreshMin"><option value="0">Any</option><option value="60">60Hz</option><option value="90">90Hz</option><option value="120">120Hz</option><option value="144">144Hz</option><option value="165">165Hz</option></select></label>
+              <label class="f-field" style="flex:1">Brightness ≥ <input type="number" id="fBrightnessMin" placeholder="0" style="width:90px" /> nits</label>
+            </div>
+            <div class="f-row" style="margin-top:6px">
+              <label class="f-field"><input type="checkbox" id="fWireless" /> Wireless charging required</label>
+              <label class="f-field"><input type="checkbox" id="fJack" /> 3.5mm jack required</label>
+            </div>
+          </div>
+
+          <!-- Camera -->
+          <div class="f-group">
+            <div class="f-head">Camera</div>
+            <div class="f-row" style="display:flex;gap:8px">
+              <label class="f-field" style="flex:1">Primary ≥ <select id="fMpMin"><option value="0">Any</option><option value="12">12MP</option><option value="48">48MP</option><option value="50">50MP</option><option value="108">108MP</option><option value="200">200MP</option></select></label>
+              <label class="f-field" style="flex:1">Telephoto <select id="fTele"><option value="">Any</option><option value="yes">Must have</option><option value="no">No telephoto</option></select></label>
+            </div>
+            <label class="f-field" style="margin-top:6px">OIS
+              <select id="fOis"><option value="">Any</option><option value="yes">Required</option><option value="no">No OIS</option></select>
+            </label>
+          </div>
+
+          <!-- Battery -->
+          <div class="f-group">
+            <div class="f-head">Battery</div>
+            <div class="f-row" style="display:flex;gap:8px">
+              <label class="f-field" style="flex:1">Capacity ≥ <select id="fBattMin"><option value="0">Any</option><option value="4000">4000 mAh</option><option value="5000">5000 mAh</option><option value="5400">5400 mAh</option></select></label>
+              <label class="f-field" style="flex:1">Wired ≥ <select id="fChargingMin"><option value="0">Any</option><option value="25">25W</option><option value="45">45W</option><option value="67">67W</option><option value="100">100W</option></select></label>
+            </div>
+          </div>
+        </aside>
+
+        <div class="finder-results">
+          <div class="finder-info mono">All filters live — results update instantly. Currency conversion pinned: PKR & USD on top. <span id="finderActiveFilters" style="color:var(--ink)"></span></div>
+          <div class="grid" id="finderGrid" style="margin-top:10px"></div>
+          <div class="empty" id="finderEmpty" style="display:none"><b>No phones match</b><p>Loosen a filter — try lowering price or removing 5G.</p></div>
         </div>
       </div>
     </section>

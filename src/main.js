@@ -2,7 +2,8 @@ import Fuse from 'fuse.js';
 import { Chart, registerables } from 'chart.js';
 Chart.register(...registerables);
 import { db, initDB, toggleFavorite, getFavorites, toggleCompare, getCompareIds, clearCompare } from './db/index.js';
-import { phones, brands, priceSegments } from './data/phones.js';
+import { catalog as catalogRaw } from './data/catalog.js';
+import { currencyRates, currencyMeta, getAllCurrencies, convertPrice, formatPrice } from './data/currencies.js';
 
 // ---------- Frame Wrapper Controls (removed — responsive layout) ----------
 const phoneFrame = document.getElementById('phoneFrame');
@@ -101,13 +102,53 @@ function toast(msg){
   setTimeout(()=>t.remove(), 2600);
 }
 
+// ---------- Currency ----------
+let currentCurrency = localStorage.getItem('aether-currency') || 'PKR'; // PKR pinned first
+function getCurrency(){ return currentCurrency; }
+function setCurrency(code){
+  currentCurrency = code;
+  localStorage.setItem('aether-currency', code);
+  const sel=document.getElementById('currencySelect');
+  if(sel) sel.value = code;
+  // re-render all price-dependent views
+  renderFeatured();
+  renderCatalog();
+  if(document.querySelector('[data-view-root="finder"]')?.style.display !== 'none') applyFinder();
+  if(document.querySelector('[data-view-root="detail"]')?.style.display === 'block' && lastDetailId) openDetail(lastDetailId, true);
+  document.querySelectorAll('[data-price-usd]').forEach(el=>{
+    const usd = parseFloat(el.getAttribute('data-price-usd'));
+    el.textContent = formatPrice(usd, currentCurrency);
+  });
+}
+function initCurrencySelect(){
+  const sel=document.getElementById('currencySelect');
+  if(!sel) return;
+  const all = getAllCurrencies();
+  sel.innerHTML='';
+  // PKR & USD pinned with divider
+  all.forEach((code, idx)=>{
+    if(idx===2){
+      const opt=document.createElement('option');
+      opt.disabled=true; opt.textContent='──────────';
+      sel.appendChild(opt);
+    }
+    const meta=currencyMeta[code] || {symbol:code, name:code};
+    const opt=document.createElement('option');
+    opt.value=code;
+    opt.textContent=`${meta.flag||''} ${code} — ${meta.symbol}`;
+    sel.appendChild(opt);
+  });
+  sel.value = currentCurrency;
+  sel.addEventListener('change', ()=> setCurrency(sel.value));
+}
+
 // ---------- DB & Offline ----------
 let allPhones=[];
 let fuse;
+let lastDetailId=null;
 async function boot(){
   await initDB();
   allPhones = await db.phones.toArray();
-  // Also ensure Fuse index
   fuse = new Fuse(allPhones, {
     keys: [
       {name:'brand', weight:0.9},{name:'model', weight:1},{name:'aka', weight:0.6},
@@ -116,17 +157,26 @@ async function boot(){
     ],
     threshold:0.35, ignoreLocation:true, includeScore:true
   });
-  document.getElementById('countPill').textContent=`${allPhones.length} Devices`;
-  document.getElementById('statDevices').textContent=allPhones.length;
-  // populate filters
+  initCurrencySelect();
+  const countEl=document.getElementById('countPill');
+  if(countEl) countEl.textContent=`${allPhones.length}`;
+  const brandCount=document.getElementById('brandCount');
+  if(brandCount) brandCount.textContent = allPhones.length;
+  const statEl=document.getElementById('statDevices');
+  if(statEl) statEl.textContent=allPhones.length;
+  // populate catalog filters
   const brandSel=document.getElementById('filterBrand');
-  [...new Set(allPhones.map(p=>p.brand))].forEach(b=>{ const o=document.createElement('option');o.value=b;o.textContent=b;brandSel.appendChild(o);});
+  if(brandSel) [...new Set(allPhones.map(p=>p.brand))].sort().forEach(b=>{ const o=document.createElement('option');o.value=b;o.textContent=b;brandSel.appendChild(o);});
   const segSel=document.getElementById('filterSegment');
-  priceSegments.forEach(s=>{ const o=document.createElement('option');o.value=s;o.textContent=s;segSel.appendChild(o);});
+  if(segSel){
+    const segs=[...new Set(allPhones.map(p=>p.price.segment))].sort();
+    segs.forEach(s=>{ const o=document.createElement('option');o.value=s;o.textContent=s;segSel.appendChild(o);});
+  }
   renderFeatured();
   renderCatalog();
   updateCompareUI();
   refreshVault();
+  initFinder();
   initRadar();
   initSensors();
   initValueCalc();
@@ -215,7 +265,7 @@ function cardHTML(p, opts={}){
         <span class="chip">${p.battery.capacity}mAh</span>
       </div>
       <div class="card-foot">
-        <div class="price">$${p.price.usd.toLocaleString()} <small>• ${p.price.segment}</small></div>
+        <div class="price" data-price-usd="${p.price.usd}">${formatPrice(p.price.usd, getCurrency())} <small>• ${p.price.segment}</small></div>
         <button class="add-compare ${inCompare?'active':''}" data-compare="${p.id}" title="Compare">${inCompare?'✓':'＋'}</button>
       </div>
     </div>
@@ -295,10 +345,11 @@ document.getElementById('clearFilters').addEventListener('click', ()=>{
 });
 
 // ---------- Detail View ----------
-async function openDetail(id){
+async function openDetail(id, isRefresh=false){
   const p = allPhones.find(x=>x.id===id);
   if(!p) return;
-  showView('detail');
+  lastDetailId = id;
+  if(!isRefresh) showView('detail');
   const favs = new Set((await db.favorites.toArray()).map(f=>f.id));
   const isFav=favs.has(id);
   const root=document.getElementById('detailRoot');
@@ -310,7 +361,7 @@ async function openDetail(id){
         <div class="detail-title">
           <h2>${p.brand} ${p.model}</h2>
           <p>${p.aka} • ${p.released} • ${p.status}</p>
-          <div class="meta"><span>$${p.price.usd} USD</span><span>${p.price.segment}</span><span>${p.highlights[0]}</span></div>
+          <div class="meta"><span data-price-usd="${p.price.usd}">${formatPrice(p.price.usd, getCurrency())}</span><span>${p.price.segment}</span><span>${p.highlights[0]}</span></div>
         </div>
       </div>
     </div>
@@ -434,6 +485,165 @@ function boxHTML(title, icon, body, open=false){
     <div class="box-head"><h4><span class="icon">${icon}</span> ${title}</h4><div class="toggle">⌃</div></div>
     <div class="box-body">${body}</div>
   </div>`;
+}
+
+// ---------- FINDER — Highly Detailed Phone Finder (beats GSMArena) ----------
+function initFinder(){
+  const brandWrap=document.getElementById('fBrandChecks');
+  if(brandWrap){
+    const brands=[...new Set(allPhones.map(p=>p.brand))].sort();
+    brandWrap.innerHTML=brands.map(b=>`<label><input type="checkbox" value="${b}" class="fBrandChk" /> ${b} <span style="color:var(--muted);font-size:11px">(${allPhones.filter(p=>p.brand===b).length})</span></label>`).join('');
+  }
+  const yMin=document.getElementById('fYearMin'), yMax=document.getElementById('fYearMax');
+  if(yMin && yMax){
+    const years=[...new Set(allPhones.map(p=>p.year||parseInt(p.released.slice(0,4))))].sort((a,b)=>a-b);
+    const minY=Math.min(...years), maxY=Math.max(...years);
+    for(let y=minY; y<=maxY; y++){
+      const o1=document.createElement('option'); o1.value=y; o1.textContent=y; yMin.appendChild(o1);
+      const o2=document.createElement('option'); o2.value=y; o2.textContent=y; yMax.appendChild(o2);
+    }
+    yMin.value=minY; yMax.value=maxY;
+  }
+  // Attach listeners
+  const ids=['fPriceMin','fPriceMax','fPriceMinR','fPriceMaxR','fYearMin','fYearMax','fTier','fWeight','fThickness','fWaterproof','fExpandable','f5G','fNFC','fIR','fUWB','fChipVendor','fRamMin','fStorageMin','fDisplayMin','fDisplayType','fRefreshMin','fBrightnessMin','fWireless','fJack','fMpMin','fTele','fOis','fBattMin','fChargingMin'];
+  ids.forEach(id=>{ const el=document.getElementById(id); if(el) el.addEventListener('input', applyFinder); if(el) el.addEventListener('change', applyFinder); });
+  document.querySelectorAll('.fBrandChk').forEach(cb=> cb.addEventListener('change', applyFinder));
+  const priceMin=document.getElementById('fPriceMin'), priceMax=document.getElementById('fPriceMax'), priceMinR=document.getElementById('fPriceMinR'), priceMaxR=document.getElementById('fPriceMaxR');
+  if(priceMin && priceMax && priceMinR && priceMaxR){
+    const syncPrice=()=>{
+      const cur=getCurrency(); const rate=currencyRates[cur]||1;
+      // inputs are in selected currency, convert hints
+      document.getElementById('finderPriceHint').textContent=`in ${cur} (1 USD = ${rate} ${cur})`;
+    };
+    // Dual sync
+    priceMin.addEventListener('input', ()=>{ priceMinR.value=priceMin.value; syncPrice(); });
+    priceMax.addEventListener('input', ()=>{ priceMaxR.value=priceMax.value; syncPrice(); });
+    priceMinR.addEventListener('input', ()=>{ priceMin.value=priceMinR.value; });
+    priceMaxR.addEventListener('input', ()=>{ priceMax.value=priceMaxR.value; });
+    syncPrice();
+  }
+  // Weight/thickness displays
+  const w=document.getElementById('fWeight'), wVal=document.getElementById('fWeightVal');
+  if(w && wVal) w.addEventListener('input', ()=> wVal.textContent=w.value+'g');
+  const t=document.getElementById('fThickness'), tVal=document.getElementById('fThicknessVal');
+  if(t && tVal) t.addEventListener('input', ()=> tVal.textContent=t.value+'mm');
+
+  const reset=document.getElementById('finderReset');
+  if(reset) reset.addEventListener('click', ()=>{
+    ids.forEach(id=>{ const el=document.getElementById(id); if(!el) return; if(el.type==='checkbox') el.checked=false; else if(el.tagName==='SELECT') el.value=el.id==='fYearMin'?'2015':el.id==='fYearMax'?'2025':''; else if(el.type==='range') el.value=el.id==='fWeight'?'300':el.id==='fThickness'?'14':el.id.includes('Price')? (el.id.includes('Min')?'50':'2500') : el.value; else el.value=''; });
+    document.querySelectorAll('.fBrandChk').forEach(cb=> cb.checked=false);
+    const pMin=document.getElementById('fPriceMin'); if(pMin) pMin.value='50';
+    const pMax=document.getElementById('fPriceMax'); if(pMax) pMax.value='2500';
+    applyFinder();
+  });
+  const save=document.getElementById('finderSave');
+  if(save) save.addEventListener('click', ()=>{
+    const active=[];
+    document.querySelectorAll('.fBrandChk:checked').forEach(cb=> active.push(cb.value));
+    const blob=new Blob([JSON.stringify({brands:active, savedAt:new Date().toISOString(), total: document.getElementById('finderCount')?.textContent}, null,2)], {type:'application/json'});
+    const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='finder-preset.json'; a.click(); URL.revokeObjectURL(url); toast('Preset saved');
+  });
+
+  applyFinder();
+}
+
+function applyFinder(){
+  if(!allPhones.length) return;
+  const cur=getCurrency(); const rate=currencyRates[cur]||1;
+  const brandChecked=[...document.querySelectorAll('.fBrandChk:checked')].map(cb=>cb.value);
+  const yearMin=parseInt(document.getElementById('fYearMin')?.value)||2015;
+  const yearMax=parseInt(document.getElementById('fYearMax')?.value)||2030;
+  const tier=document.getElementById('fTier')?.value||'';
+  const priceMinCur=parseInt(document.getElementById('fPriceMin')?.value)||0;
+  const priceMaxCur=parseInt(document.getElementById('fPriceMax')?.value)||99999;
+  const priceMinUSD = priceMinCur / rate;
+  const priceMaxUSD = priceMaxCur / rate;
+  const weightMax=parseInt(document.getElementById('fWeight')?.value)||999;
+  const thickMax=parseFloat(document.getElementById('fThickness')?.value)||99;
+  const waterproof=document.getElementById('fWaterproof')?.value||'';
+  const expandable=document.getElementById('fExpandable')?.checked;
+  const has5G=document.getElementById('f5G')?.checked;
+  const hasNFC=document.getElementById('fNFC')?.checked;
+  const hasIR=document.getElementById('fIR')?.checked;
+  const hasUWB=document.getElementById('fUWB')?.checked;
+  const chipVendor=document.getElementById('fChipVendor')?.value||'';
+  const ramMin=parseInt(document.getElementById('fRamMin')?.value)||0;
+  const storageMin=parseInt(document.getElementById('fStorageMin')?.value)||0;
+  const displayMin=parseFloat(document.getElementById('fDisplayMin')?.value)||0;
+  const displayType=document.getElementById('fDisplayType')?.value||'';
+  const refreshMin=parseInt(document.getElementById('fRefreshMin')?.value)||0;
+  const brightMin=parseInt(document.getElementById('fBrightnessMin')?.value)||0;
+  const wirelessReq=document.getElementById('fWireless')?.checked;
+  const jackReq=document.getElementById('fJack')?.checked;
+  const mpMin=parseInt(document.getElementById('fMpMin')?.value)||0;
+  const tele=document.getElementById('fTele')?.value||'';
+  const ois=document.getElementById('fOis')?.value||'';
+  const battMin=parseInt(document.getElementById('fBattMin')?.value)||0;
+  const chargingMin=parseInt(document.getElementById('fChargingMin')?.value)||0;
+
+  let results=allPhones.filter(p=>{
+    if(brandChecked.length && !brandChecked.includes(p.brand)) return false;
+    const y=p.year||parseInt(p.released.slice(0,4));
+    if(y<yearMin || y>yearMax) return false;
+    if(tier && p.price.segment!==tier) return false;
+    if(p.price.usd < priceMinUSD || p.price.usd > priceMaxUSD) return false;
+    if((p.body?.weight||999) > weightMax) return false;
+    if((p.body?.thickness||0) > thickMax) return false;
+    if(waterproof && (p.body?.ip||'') !== waterproof) return false;
+    if(expandable && !p.expandable) return false;
+    if(has5G && !p.has5G) return false;
+    if(hasNFC && !p.hasNFC) return false;
+    if(hasIR && !p.hasIR) return false;
+    if(hasUWB && !p.hasUWB) return false;
+    if(chipVendor && !p.soc.chipset.includes(chipVendor)) return false;
+    if((p.ramGB||0) < ramMin) return false;
+    if((p.storageGB||0) < storageMin) return false;
+    if((p.displaySize||0) < displayMin) return false;
+    if(displayType && !p.display.type.includes(displayType)) return false;
+    if((p.refreshHz||0) < refreshMin) return false;
+    if((p.display.brightness?.peak1||0) < brightMin) return false;
+    if(wirelessReq && !p.hasWireless) return false;
+    if(jackReq && !p.hasJack) return false;
+    if((p.primaryMP||0) < mpMin) return false;
+    if(tele==='yes' && !p.camera.tele1) return false;
+    if(tele==='no' && p.camera.tele1) return false;
+    if(ois==='yes' && p.camera.primary.ois==='No') return false;
+    if(ois==='no' && p.camera.primary.ois!=='No') return false;
+    if((p.batteryCapacity||p.battery.capacity||0) < battMin) return false;
+    if((p.wiredWatts||0) < chargingMin) return false;
+    return true;
+  });
+
+  // Sort by relevance: closest to price mid, newest first
+  results.sort((a,b)=> b.year - a.year);
+
+  const countEl=document.getElementById('finderCount');
+  const countNav=document.getElementById('finderCountNav');
+  if(countEl) countEl.textContent=`${results.length} phones found • in ${cur}`;
+  if(countNav) countNav.textContent=results.length;
+  const activeEl=document.getElementById('finderActiveFilters');
+  if(activeEl){
+    const activeCount = [brandChecked.length?1:0, tier?1:0, has5G?1:0, hasNFC?1:0, hasIR?1:0, hasUWB?1:0, wirelessReq?1:0].filter(Boolean).length;
+    activeEl.textContent = activeCount? `• ${activeCount} active` : '';
+  }
+
+  const grid=document.getElementById('finderGrid');
+  const empty=document.getElementById('finderEmpty');
+  if(!grid) return;
+  if(results.length===0){
+    grid.style.display='none'; if(empty) empty.style.display='block';
+  } else {
+    grid.style.display='grid'; if(empty) empty.style.display='none';
+    // Limit to 48 for performance
+    const slice=results.slice(0,48);
+    grid.innerHTML=slice.map(p=>cardHTML(p)).join('');
+    attachCardListeners(grid);
+    if(results.length>48){
+      const more=document.createElement('div'); more.className='mono'; more.style.cssText='grid-column:1/-1;text-align:center;padding:12px;color:var(--muted);font-size:12px';
+      more.textContent=`Showing 48 of ${results.length} — narrow filters to see more`;
+      grid.appendChild(more);
+    }
+  }
 }
 
 // ---------- Compare ----------
