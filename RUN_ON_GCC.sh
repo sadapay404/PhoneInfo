@@ -1,15 +1,13 @@
 #!/bin/bash
-# Copy-paste this ENTIRE block into Google Cloud Shell (GCC)
+# SAFE for GCC — run from ANY directory (even ~/PhoneInfo)
 set -e
-echo "→ Cleaning old clone if exists..."
+echo "→ Resetting..."
+cd ~
 rm -rf ~/PhoneInfo
-echo "→ Cloning..."
 git clone https://github.com/sadapay404/PhoneInfo.git ~/PhoneInfo
 cd ~/PhoneInfo
-echo "→ Current directory: $(pwd)"
+echo "→ In: $(pwd)"
 ls -lh package.json vite.config.js
-echo "→ Installing..."
 npm install
-echo "→ Starting dev server on 0.0.0.0:3000 (Cloud Shell Preview)..."
-echo "   After it starts, click: Web Preview (top-right eye icon) → Preview on port 3000 → Change port to 3000 if needed"
+echo "→ Starting on 0.0.0.0:3000 → Use Web Preview → Preview on port 3000"
 npm run dev
