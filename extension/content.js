@@ -9,13 +9,18 @@
   const PAUSE_MS = 300;
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-  /** Official photos and review photos from the Pictures page, plus whether a 3D view exists. */
+  /**
+   * Photos that belong to THIS phone only, from its Pictures page, plus its 3D preview views.
+   * The page also lists other phones and unrelated images; those are filtered out by file name.
+   */
   async function collectGallery(deviceUrl) {
     const picUrl = deviceUrl.replace(/-(\d+)\.php(?:[?#].*)?$/, '-pictures-$1.php');
+    const threed = [];
     const res = await fetch(picUrl, { credentials: 'omit' });
-    if (!res.ok) return { items: [], has_3d: false, pictures_url: picUrl };
+    if (!res.ok) return { items: [], has_3d: false, threed_views: threed, pictures_url: picUrl };
     const html = await res.text();
     const doc = new DOMParser().parseFromString(html, 'text/html');
+    const slugs = window.AetherExtract.modelSlugs(deviceUrl);
 
     const seen = new Set();
     const items = [];
@@ -23,23 +28,28 @@
       if (!raw) return;
       let u;
       try {
-        u = new URL(raw, picUrl).href;
+        u = new URL(raw, picUrl).href.split('?')[0];
       } catch {
         return;
       }
-      if (!/\.(jpe?g|png|webp)(\?.*)?$/i.test(u)) return;
-      const kind = /\/imgroot\/reviews\//.test(u) ? 'review' : /fdn2?\.gsmarena\.com\/vv\/(pics|bigpic)\//.test(u) ? 'official' : null;
-      if (!kind) return;
-      const key = u.split('?')[0].split('/').pop(); // same file, different size: keep the first (links come first)
+      if (!/\.(jpe?g|png|webp)$/i.test(u)) return;
+      if (!window.AetherExtract.isPhoneImage(u, slugs)) return;
+      const key = u.split('/').pop().toLowerCase(); // same file at another size: keep the first seen
       if (seen.has(key)) return;
       seen.add(key);
-      items.push({ kind, url: u });
+      items.push({ kind: /\/imgroot\/reviews\//.test(u) ? 'review' : 'official', url: u });
     };
-    // Links to full-size images come first, so they win over thumbnails.
+    // Full-size links come first, so they win over thumbnails.
     doc.querySelectorAll('a[href]').forEach((a) => add(a.getAttribute('href')));
     doc.querySelectorAll('img[src]').forEach((img) => add(img.getAttribute('src')));
 
-    return { items: items.slice(0, 80), has_3d: /binkies3d/i.test(html), pictures_url: picUrl };
+    threed.push(...window.AetherExtract.findThreeDViews(html));
+    return {
+      items: items.slice(0, 80),
+      has_3d: threed.length > 0,
+      threed_views: threed,
+      pictures_url: picUrl,
+    };
   }
 
   async function fetchPhoto(url) {
@@ -83,7 +93,7 @@
       const device = window.AetherMapper.toDevice(raw, {
         imageDataUrl: main ? main.dataUrl : undefined,
         savedOn: new Date().toISOString(),
-        gallery: { has_3d: gallery.has_3d, pictures_url: gallery.pictures_url, photo_count: photos.length },
+        gallery: { has_3d: gallery.has_3d, pictures_url: gallery.pictures_url, photo_count: photos.length, threed_views: gallery.threed_views },
       });
       // Photos live under their own key so the phone list stays small.
       const stored = photos.map((p, i) => ({ ...p, file: `${String(i + 1).padStart(2, '0')}-${p.kind}` }));

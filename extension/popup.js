@@ -51,18 +51,19 @@ document.getElementById('export').addEventListener('click', async () => {
   const store = await chrome.storage.local.get(null);
   const entries = [];
   const out = [];
-  for (const p of phones) {
+  const folders = AetherZip.folderNames(phones); // "OnePlus 15", not the internal id
+  phones.forEach((p, i) => {
     const { image, ...rest } = p; // the data URL goes into the ZIP as a file instead
     const files = [];
     for (const ph of store[`photos:${p.id}`] || []) {
       const mime = ph.dataUrl.slice(5, ph.dataUrl.indexOf(';'));
-      const path = `photos/${p.id}/${ph.file}.${EXT[mime] || 'jpg'}`;
+      const path = `photos/${folders[i]}/${ph.file}.${EXT[mime] || 'jpg'}`;
       entries.push({ name: path, data: AetherZip.dataUrlToBytes(ph.dataUrl) });
       files.push({ kind: ph.kind, file: path, source: ph.source });
     }
     const main = files.find((f) => f.kind === 'official') || files[0];
     out.push({ ...rest, image: main ? main.file : undefined, photos: files });
-  }
+  });
   entries.unshift({ name: 'aetherphone-saved.json', data: new TextEncoder().encode(JSON.stringify(out)) });
   const zip = AetherZip.buildZip(entries);
   const url = URL.createObjectURL(new Blob([zip], { type: 'application/zip' }));

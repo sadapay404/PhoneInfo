@@ -77,6 +77,33 @@
     return concat([...parts, ...central, new Uint8Array(end.buffer)]);
   }
 
+
+  /** A folder-safe name: no path separators or reserved characters, no trailing dots. */
+  function safeName(text) {
+    const cleaned = String(text)
+      .replace(/[\\/:*?"<>|\x00-\x1f]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .replace(/[. ]+$/, '')
+      .slice(0, 80);
+    return cleaned || 'Phone';
+  }
+
+  /**
+   * One folder per phone, named "Brand Model" (e.g. "OnePlus 15").
+   * Two phones with the same name get " (2)", " (3)", ... so folders never merge.
+   */
+  function folderNames(phones) {
+    const used = new Set();
+    return phones.map((p) => {
+      const base = safeName(`${p.brand} ${p.model}`);
+      let name = base;
+      for (let n = 2; used.has(name.toLowerCase()); n++) name = `${base} (${n})`;
+      used.add(name.toLowerCase());
+      return name;
+    });
+  }
+
   /** "data:image/jpeg;base64,..." -> bytes. */
   function dataUrlToBytes(dataUrl) {
     const b64 = dataUrl.slice(dataUrl.indexOf(',') + 1);
@@ -86,7 +113,7 @@
     return out;
   }
 
-  const api = { buildZip, crc32, dataUrlToBytes };
+  const api = { buildZip, crc32, dataUrlToBytes, safeName, folderNames };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.AetherZip = api;
 })(typeof globalThis !== 'undefined' ? globalThis : window);

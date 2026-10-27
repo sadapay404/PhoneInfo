@@ -413,3 +413,12 @@ input[type='search'], input[type='number'], select { font-size: 15px; }
 .lightbox { position: fixed; inset: 0; z-index: 100; background: rgba(0,0,0,.85); display: grid; grid-template-rows: 1fr auto; padding: 16px; }
 .lightbox img { justify-self: center; align-self: center; max-width: 100%; max-height: 100%; object-fit: contain; }
 .lightbox-bar { display: flex; gap: 10px; align-items: center; justify-content: center; color: #fff; padding-top: 12px; }
+
+/* 3D preview views (online) */
+.threed-views { margin-top: 16px; }
+.threed-views h3 { margin: 0; font-size: 15px; }
+.threed-views p { margin: 2px 0 0; }
+.threed-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; margin-top: 10px; }
+.threed-grid figure { margin: 0; text-align: center; background: var(--img-bg); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 8px; }
+.threed-grid img { width: 100%; height: auto; min-height: 96px; object-fit: contain; }
+.threed-grid figcaption { font-size: 12px; color: var(--muted); text-transform: capitalize; }

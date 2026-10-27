@@ -111,7 +111,7 @@ export interface Device {
   /** Full spec sheet as saved from a page: category -> label -> value. Shown on the detail page. */
   raw_specs?: Record<string, Record<string, string>>;
   /** Photo and 3D info for saved phones. Photos themselves are in the `photos` table. */
-  gallery?: { has_3d: boolean; pictures_url?: string; photo_count: number };
+  gallery?: { has_3d: boolean; pictures_url?: string; photo_count: number; threed_views?: { view: string; url: string }[] };
 }
 
 export type Category =

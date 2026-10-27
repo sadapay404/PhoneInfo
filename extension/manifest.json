@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "AetherPhone Saver",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Save a GSMArena phone page and its photos to your own AetherPhone library, for personal offline use.",
   "permissions": ["storage", "unlimitedStorage"],
   "host_permissions": [

@@ -103,9 +103,12 @@ server and no data sent anywhere.
 
 1. Open a phone page on gsmarena.com (any page with a spec table).
 2. Click **Save to AetherPhone** (bottom right). The page's specs, every official photo
-   (all angles and colours), and the review photos are copied into the extension. The 3D
-   model is not copied; the phone page links to GSMArena's 3D viewer instead.
-3. Click the extension icon, then **Export ZIP** to download `aetherphone-saved.zip`.
+   (all angles and colours), and the review photos are copied into the extension. Only
+   phone-specific images are kept. 3D: the four preview views are saved as links (they load
+   online from Binkies 3D, the same as GSMArena's page), plus a link to the interactive viewer.
+   The 3D models themselves are not downloaded.
+3. Click the extension icon, then **Export ZIP** to download `aetherphone-saved.zip`. Each
+   phone gets its own folder named after the phone (for example `photos/OnePlus 15/`).
 4. In the app, open **Tools → Saved phones** and **Import ZIP**. Saved phones and their
    photos appear in PhoneFinder and work offline on that device.
 

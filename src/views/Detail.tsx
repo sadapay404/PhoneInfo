@@ -118,10 +118,24 @@ export function Detail({ device, all, inCompare, onBack, onToggleCompare }: {
             <h2>Photos {photos.length > 0 && <span className="muted small">({photos.length})</span>}</h2>
             {device.gallery?.has_3d && device.gallery.pictures_url && (
               <a className="btn-outline" href={device.gallery.pictures_url} target="_blank" rel="noopener noreferrer">
-                <Icon name="plus" size={16} /> View 3D model on GSMArena
+                <Icon name="plus" size={16} /> Open interactive 3D on GSMArena
               </a>
             )}
           </div>
+          {device.gallery?.threed_views && device.gallery.threed_views.length > 0 && (
+            <div className="threed-views">
+              <h3>3D views</h3>
+              <p className="muted small">Rendered by Binkies 3D through GSMArena. These load from the internet, not from this device.</p>
+              <div className="threed-grid">
+                {device.gallery.threed_views.map((v) => (
+                  <figure key={v.view}>
+                    <img src={v.url} alt={`3D model, ${v.view} view`} loading="lazy" />
+                    <figcaption>{v.view}</figcaption>
+                  </figure>
+                ))}
+              </div>
+            </div>
+          )}
           {photos.length > 0 ? (
             <div className="gallery-grid">
               {photos.map((p, i) => (
