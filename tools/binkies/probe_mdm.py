@@ -144,9 +144,10 @@ def main():
     print(f'decoded bytes before stop: {len(decoded)}')
     print(f'input chunk where decoding stopped starts at byte {stop} of {len(raw)}')
     print(f'error: {err}')
-    print('decoded first 128 bytes:', decoded[:128].hex(' '))
-    print('decoded readable strings (offset, text), first 80:')
-    for m in list(re.finditer(rb'[\x20-\x7e]{6,}', decoded))[:80]:
+    print('\n--- decoded output, first 1024 bytes (hex dump) ---')
+    print(hexdump(decoded, 0, 1024))
+    print('decoded readable strings (offset, text), first 500:')
+    for m in list(re.finditer(rb'[\x20-\x7e]{6,}', decoded))[:500]:
         print(f'  {m.start():8d}  {m.group()[:120].decode("ascii", "replace")}')
     if decoded:
         names = sorted(set(re.findall(rb'[\w\-./]{3,}\.(?:jpe?g|png|webp|ktx2?|dds|hdr|bin|mdm|glb)', decoded, re.I)))
