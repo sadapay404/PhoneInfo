@@ -148,31 +148,25 @@
     status(`Saved ${raw.brand} ${raw.model}: ${photos.length} photo${photos.length === 1 ? '' : 's'}${failed ? ` (${failed} failed)` : ''}, ${rows.length} price${rows.length === 1 ? '' : 's'}.`);
   }
 
+  // Same button as the GSMArena page: bottom right, same label and style. Progress shows on the button.
   function addButton() {
-    if (document.getElementById('aetherphone-priceoye-extract')) return;
-    const btn = document.createElement('button');
-    btn.id = 'aetherphone-priceoye-extract';
-    btn.type = 'button';
-    btn.textContent = 'AetherPhone · Save from PriceOye';
-    Object.assign(btn.style, {
-      position: 'fixed', left: '16px', bottom: '60px', zIndex: '2147483647',
+    if (document.getElementById('aether-save')) return;
+    const button = document.createElement('button');
+    button.id = 'aether-save';
+    button.textContent = 'Save to AetherPhone';
+    Object.assign(button.style, {
+      position: 'fixed', right: '16px', bottom: '16px', zIndex: '2147483647',
       padding: '10px 16px', borderRadius: '999px', border: '0', cursor: 'pointer',
-      background: '#0f766e', color: '#fff', font: '600 14px system-ui, sans-serif',
-      boxShadow: '0 6px 20px rgba(0,0,0,.25)', maxWidth: 'calc(100vw - 32px)',
+      background: '#2f5bea', color: '#fff', font: '600 14px system-ui, sans-serif',
+      boxShadow: '0 6px 20px rgba(0,0,0,.25)',
     });
-    const note = document.createElement('div');
-    Object.assign(note.style, {
-      position: 'fixed', left: '16px', bottom: '110px', zIndex: '2147483647', maxWidth: '320px',
-      background: '#111827', color: '#fff', font: '13px/1.4 system-ui, sans-serif',
-      padding: '8px 10px', borderRadius: '8px', display: 'none',
+    button.addEventListener('click', async () => {
+      button.disabled = true;
+      const status = (text) => { button.textContent = text; };
+      try { await run(status); } catch (err) { status(`Failed: ${err && err.message ? err.message : err}`); }
+      button.disabled = false;
     });
-    const status = (text) => { note.textContent = text; note.style.display = 'block'; };
-    btn.addEventListener('click', async () => {
-      btn.disabled = true;
-      try { await run(status); } catch (err) { status(`Could not save: ${err && err.message ? err.message : err}`); }
-      btn.disabled = false;
-    });
-    document.body.append(note, btn);
+    document.body.append(button);
   }
 
   if (!C.productFromPath(location.pathname)) return; // only on phone pages

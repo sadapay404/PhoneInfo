@@ -55,12 +55,12 @@ async function runPage({ store, failUrl }) {
   };
   w.eval(read('priceoye-core.js'));
   w.eval(read('priceoye-extract.js'));
-  const btn = w.document.getElementById('aetherphone-priceoye-extract');
+  const btn = w.document.getElementById('aether-save');
   assert.ok(btn, 'button is added');
+  assert.equal(btn.textContent, 'Save to AetherPhone');
   btn.click();
-  const note = w.document.body.lastElementChild.previousElementSibling;
   for (let i = 0; i < 100 && btn.disabled; i++) await sleep(50);
-  return { data, requested, note: note.textContent, doc: w.document };
+  return { data, requested, note: btn.textContent, doc: w.document };
 }
 
 test('phone not saved yet: saves photos, the device, and every variant price', async () => {
@@ -111,5 +111,5 @@ test('a page that is not a phone page gets no button', () => {
   dom.window.chrome = { storage: { local: { get: async () => ({}) } }, runtime: {} };
   dom.window.eval(read('priceoye-core.js'));
   dom.window.eval(read('priceoye-extract.js'));
-  assert.equal(dom.window.document.getElementById('aetherphone-priceoye-extract'), null);
+  assert.equal(dom.window.document.getElementById('aether-save'), null);
 });

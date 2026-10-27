@@ -129,8 +129,9 @@ The 3D model file itself is never saved. The files are exported in the ZIP under
 own record of the viewer's requests, so nothing is guessed. Binkies 3D content is used under
 the personal-use permission you have described; keep it for personal use only.
 
-**PKR prices and PriceOye (version 0.5.0).** On a PriceOye phone page (`priceoye.pk/mobiles/brand/model`),
-click **AetherPhone · Save from PriceOye** (above the PKR prices button, bottom left):
+**PKR prices from PriceOye (version 0.5.1).** On a PriceOye phone page (`priceoye.pk/mobiles/brand/model`),
+click **Save to AetherPhone** (bottom right, the same button and position as on GSMArena). The
+button shows its progress as it works:
 
 - If the phone is already saved from GSMArena (same brand and model), it saves the PKR price for
   every RAM/storage variant, plus facts GSMArena lacks (rating, review count, warranty, whether the
@@ -140,16 +141,14 @@ click **AetherPhone · Save from PriceOye** (above the PKR prices button, bottom
   Specs are not read from PriceOye, so the spec sheet stays empty for those phones.
 
 The button clicks each RAM/storage option on the page to read its price, so the page may end up
-showing the last option. It reads only what the page shows you, and it only runs when you click it. Prices are exported in `aetherphone-prices.json`, the same as the manual panel.
+showing the last option. It reads only what the page shows you, and it only runs when you click it.
+Prices are exported in `aetherphone-prices.json` with the ZIP.
 
 Written permission: you have said PriceOye gave you written permission for personal use. Keep
 that email with your records. PriceOye's terms restrict collecting prices and using data
 extraction tools, so the permission matters. This project does not give a legal opinion.
 Check the page structure against a live page once: the variant and price detection is based on the
 visible page text, which may change without notice.
-
-**Manual PKR price panel (version 0.4.0).** The **AetherPhone · PKR prices** button (bottom left)
-still works for typing prices yourself. It does not read the PriceOye page.
 
 Install: open `chrome://extensions`, turn on Developer mode, click **Load unpacked**, and
 choose the `extension` folder. Run its tests with `for f in extension/test/*.mjs; do node --test "$f"; done` (run `npm ci` first, so `jsdom` is installed).
