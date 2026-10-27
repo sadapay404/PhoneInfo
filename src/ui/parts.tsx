@@ -1,5 +1,6 @@
-import type { ButtonHTMLAttributes, ReactNode } from 'react';
+import { useEffect, useState, type ButtonHTMLAttributes, type ReactNode } from 'react';
 import type { Device } from '../data/types';
+import { toTransparentPng } from '../lib/transparent';
 
 /* ---------- Icons: one stroke style, 24px grid ---------- */
 
@@ -88,10 +89,24 @@ export function imageSrc(image?: string): string | undefined {
   return image.startsWith('data:') ? image : `${import.meta.env.BASE_URL}catalog/${image}`;
 }
 
+/** An <img> whose background is made transparent (PNG). Shows the original until the PNG is ready. */
+export function CleanImage({ src, alt, className = '' }: { src: string; alt: string; className?: string }) {
+  const [out, setOut] = useState(src);
+  useEffect(() => {
+    let live = true;
+    setOut(src);
+    toTransparentPng(src).then((r) => live && setOut(r));
+    return () => {
+      live = false;
+    };
+  }, [src]);
+  return <img className={className} src={out} alt={alt} loading="lazy" decoding="async" />;
+}
+
 export function Photo({ device, src, className = '' }: { device: Device; src?: string; className?: string }) {
   const url = src ?? imageSrc(device.image);
   if (url) {
-    return <img className={`photo ${className}`} src={url} alt={`${device.brand} ${device.model}`} loading="lazy" decoding="async" />;
+    return <CleanImage src={url} alt={`${device.brand} ${device.model}`} className={`photo ${className}`} />;
   }
   return (
     <div className={`photo photo-empty ${className}`} aria-label={`${device.brand} ${device.model}`} role="img">

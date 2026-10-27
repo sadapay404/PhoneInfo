@@ -5,7 +5,7 @@ import { loadPhotos } from '../data/savedPhones';
 import type { SavedPhoto } from '../data/db';
 import { addPrice, formatPkr, isOld, latestByVariant, pricesFor, variantKey, variantLabel, variantsFor, type Variant } from '../data/prices';
 import type { PriceEntry } from '../data/db';
-import { Button, Empty, Icon, Photo, Stat, imageSrc } from './parts';
+import { Button, CleanImage, Empty, Icon, Photo, Stat, imageSrc } from './parts';
 import { MAX_COMPARE, navigate, useCompareIds } from './state';
 
 function hasValue(v: unknown): boolean {
@@ -211,7 +211,7 @@ function Gallery({ items, name }: { items: { src: string; kind: string }[]; name
         {items.map((it, i) => (
           <li key={i}>
             <button type="button" className="gallery-thumb" onClick={() => setOpen(i)} aria-label={`Open photo ${i + 1} of ${items.length}`}>
-              <img src={it.src} alt={`${name} photo ${i + 1}`} loading="lazy" decoding="async" />
+              <CleanImage src={it.src} alt={`${name} photo ${i + 1}`} />
             </button>
           </li>
         ))}
@@ -219,7 +219,7 @@ function Gallery({ items, name }: { items: { src: string; kind: string }[]; name
 
       {open !== null && (
         <div className="lightbox" role="dialog" aria-modal="true" aria-label="Photo viewer" onClick={() => setOpen(null)}>
-          <img src={items[open].src} alt={`${name} photo ${open + 1}`} onClick={(e) => e.stopPropagation()} />
+          <CleanImage src={items[open].src} alt={`${name} photo ${open + 1}`} className="lightbox-img" />
           <div className="lightbox-bar" onClick={(e) => e.stopPropagation()}>
             <Button variant="quiet" small onClick={() => setOpen((open - 1 + items.length) % items.length)} aria-label="Previous photo">
               <Icon name="back" size={18} />

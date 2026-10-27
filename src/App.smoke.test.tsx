@@ -4,6 +4,7 @@ import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { App } from './App';
 import { db } from './data/db';
+import { parseSavedJson } from './data/savedPhones';
 
 (globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -33,6 +34,8 @@ beforeEach(async () => {
   await db.delete();
   await db.open();
   window.localStorage.clear();
+  // Only phones the user saved are shown, so the test seeds one saved phone.
+  await db.saved.bulkPut(parseSavedJson(JSON.stringify([{ id: 'acme-zeta-1', brand: 'Acme', model: 'Zeta 1', year: 2025, body: { weight_g: 190 }, display: { size_in: 6.5, refresh_hz_max: 120 }, battery: { capacity_mah: 5000 } }])));
 });
 
 afterEach(() => {
@@ -52,7 +55,7 @@ describe('new interface', () => {
   });
 
   it('opens a phone page with specs and the price book', async () => {
-    const el = render('#/phone/google-pixel-8-pro');
+    const el = render('#/phone/acme-zeta-1');
     await waitFor(() => el.querySelector('h1') !== null && el.textContent?.includes('Specifications') === true);
     expect(el.querySelector('.stats')).not.toBeNull();
     expect(el.querySelector('#prices')).not.toBeNull();
