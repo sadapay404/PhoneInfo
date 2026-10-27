@@ -55,6 +55,25 @@ def try_brotli(raw, off):
     return None
 
 
+def decode_partial(raw, chunk=4096):
+    """Decode a whole-file Brotli stream, keeping everything decoded before any error.
+
+    Returns (decoded_bytes, error_message_or_None, input_offset_where_stopped).
+    """
+    d = brotli.Decompressor()
+    out = []
+    pos = 0
+    while pos < len(raw):
+        try:
+            out.append(d.process(raw[pos:pos + chunk]))
+        except brotli.error as e:
+            return b''.join(out), str(e), pos
+        pos += chunk
+        if d.is_finished():
+            break
+    return b''.join(out), None if d.is_finished() else 'stream not finished', pos
+
+
 def try_zlib(raw, off):
     try:
         d = zlib.decompressobj()
@@ -119,6 +138,22 @@ def main():
     print('\n--- first 32 little-endian uint32 values, from offset 0 ---')
     vals = [struct.unpack_from('<I', raw, i)[0] for i in range(0, min(128, len(raw)), 4)]
     print(' '.join(str(v) for v in vals))
+
+    print('\n--- whole file as one Brotli stream (partial decode) ---')
+    decoded, err, stop = decode_partial(raw)
+    print(f'decoded bytes before stop: {len(decoded)}')
+    print(f'input chunk where decoding stopped starts at byte {stop} of {len(raw)}')
+    print(f'error: {err}')
+    print('decoded first 128 bytes:', decoded[:128].hex(' '))
+    print('decoded readable strings (offset, text), first 80:')
+    for m in list(re.finditer(rb'[\x20-\x7e]{6,}', decoded))[:80]:
+        print(f'  {m.start():8d}  {m.group()[:120].decode("ascii", "replace")}')
+    if decoded:
+        names = sorted(set(re.findall(rb'[\w\-./]{3,}\.(?:jpe?g|png|webp|ktx2?|dds|hdr|bin|mdm|glb)', decoded, re.I)))
+        print(f'texture/mesh names in decoded output: {len(names)}')
+        for n in names[:120]:
+        
+            print('  ', n.decode('ascii', 'replace'))
 
     print('\n--- entropy per 4 KB block (about 8.0 = compressed or encrypted, under 6 = structured) ---')
     ent = []
