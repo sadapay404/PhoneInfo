@@ -121,13 +121,35 @@ Notes:
 - The field mapping is written against the GSMArena table layout. Check a saved phone's
   **Full spec sheet** against the source page once, and report any mismatch.
 
-**PKR prices (version 0.4.0).** On a PriceOye page, click **AetherPhone · PKR prices**
-(bottom left). Pick a saved phone. Its RAM/storage variants are listed from the GSMArena data
-you saved, and you type each price you see on the page, with the shop and date. The panel
-does not read anything from the PriceOye page. Prices are kept in the extension, exported in
-`aetherphone-prices.json` with the ZIP, and imported into the app's price log. Check
-PriceOye's terms before you use this. Their Terms restrict collecting prices and using data
-extraction tools, and this panel is a manual entry aid, not an extractor.
+**3D viewer images (version 0.5.0).** On a GSMArena pictures page (the **Pictures** tab), open
+the 3D view first and wait for it to load. Then click **AetherPhone · Save 3D images** (bottom
+left). It saves the image files the viewer loaded: model textures, lightmaps and render previews.
+The 3D model file itself is never saved. The files are exported in the ZIP under
+`3d-images/<phone folder>/`. The app does not show them yet. The list comes from your browser's
+own record of the viewer's requests, so nothing is guessed. Binkies 3D content is used under
+the personal-use permission you have described; keep it for personal use only.
+
+**PKR prices and PriceOye (version 0.5.0).** On a PriceOye phone page (`priceoye.pk/mobiles/brand/model`),
+click **AetherPhone · Save from PriceOye** (above the PKR prices button, bottom left):
+
+- If the phone is already saved from GSMArena (same brand and model), it saves the PKR price for
+  every RAM/storage variant, plus facts GSMArena lacks (rating, review count, warranty, whether the
+  phone is discontinued). No images are taken.
+- If the phone is not saved yet, it saves the phone's own PriceOye photos (the product's
+  photos only, not similar phones'), a device record with its RAM/storage variants, and the prices.
+  Specs are not read from PriceOye, so the spec sheet stays empty for those phones.
+
+The button clicks each RAM/storage option on the page to read its price, so the page may end up
+showing the last option. It reads only what the page shows you, and it only runs when you click it. Prices are exported in `aetherphone-prices.json`, the same as the manual panel.
+
+Written permission: you have said PriceOye gave you written permission for personal use. Keep
+that email with your records. PriceOye's terms restrict collecting prices and using data
+extraction tools, so the permission matters. This project does not give a legal opinion.
+Check the page structure against a live page once: the variant and price detection is based on the
+visible page text, which may change without notice.
+
+**Manual PKR price panel (version 0.4.0).** The **AetherPhone · PKR prices** button (bottom left)
+still works for typing prices yourself. It does not read the PriceOye page.
 
 Install: open `chrome://extensions`, turn on Developer mode, click **Load unpacked**, and
-choose the `extension` folder. Run its tests with `for f in extension/test/*.mjs; do node --test "$f"; done`.
+choose the `extension` folder. Run its tests with `for f in extension/test/*.mjs; do node --test "$f"; done` (run `npm ci` first, so `jsdom` is installed).

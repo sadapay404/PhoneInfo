@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "AetherPhone Saver",
-  "version": "0.4.1",
-  "description": "Save GSMArena phones and photos, and log PKR prices you see on PriceOye, to your own AetherPhone library. Personal use.",
+  "version": "0.5.0",
+  "description": "Save GSMArena phones, photos and 3D viewer images, and log PKR prices from PriceOye, to your own AetherPhone library. Personal use.",
   "permissions": [
     "storage",
     "unlimitedStorage"
@@ -10,7 +10,11 @@
   "host_permissions": [
     "https://www.gsmarena.com/*",
     "https://fdn.gsmarena.com/*",
-    "https://fdn2.gsmarena.com/*"
+    "https://fdn2.gsmarena.com/*",
+    "https://images.priceoye.pk/*",
+    "https://engage-content.binkies3d.com/*",
+    "https://engage-content2.binkies3d.com/*",
+    "https://render.binkies3d.com/*"
   ],
   "background": {
     "service_worker": "background.js"
@@ -29,11 +33,25 @@
     },
     {
       "matches": [
+        "https://www.gsmarena.com/*",
+        "https://*.binkies3d.com/*"
+      ],
+      "js": [
+        "binkies-core.js",
+        "binkies.js"
+      ],
+      "run_at": "document_idle",
+      "all_frames": true
+    },
+    {
+      "matches": [
         "https://priceoye.pk/*"
       ],
       "js": [
         "prices-core.js",
-        "priceoye.js"
+        "priceoye.js",
+        "priceoye-core.js",
+        "priceoye-extract.js"
       ],
       "run_at": "document_idle"
     }

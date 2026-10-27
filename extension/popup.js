@@ -27,12 +27,13 @@ function render(phones) {
     strong.textContent = `${p.brand} ${p.model}`;
     const small = document.createElement('small');
     const photos = p.gallery?.photo_count ?? 0;
-    small.textContent = `${p.year} · ${photos} photos${p.gallery?.has_3d ? ' · 3D view' : ''}`;
+    const origin = p.priceoye ? ' · PriceOye' : '';
+    small.textContent = `${p.year ? `${p.year} · ` : ''}${photos} photos${p.gallery?.has_3d ? ' · 3D view' : ''}${origin}`;
     label.append(strong, small);
     const del = document.createElement('button');
     del.textContent = 'Delete';
     del.addEventListener('click', async () => {
-      await chrome.storage.local.remove([`phone:${p.id}`, `photos:${p.id}`, `prices:${p.id}`]);
+      await chrome.storage.local.remove([`phone:${p.id}`, `photos:${p.id}`, `prices:${p.id}`, `binkies:${p.id}`]);
       refresh();
     });
     li.append(img, label, del);
@@ -63,6 +64,10 @@ document.getElementById('export').addEventListener('click', async () => {
     }
     const main = files.find((f) => f.kind === 'official') || files[0];
     out.push({ ...rest, image: main ? main.file : undefined, photos: files });
+    // 3D viewer image files (textures, lightmaps, render previews). Archive only; the app does not show them yet.
+    for (const bf of store[`binkies:${p.id}`] || []) {
+      entries.push({ name: `3d-images/${folders[i]}/${bf.name}`, data: AetherZip.dataUrlToBytes(bf.dataUrl) });
+    }
   });
   // Price log (typed by you on PriceOye, or as entered in the app). One flat list, with the device id on each row.
   const prices = [];
@@ -80,7 +85,7 @@ document.getElementById('export').addEventListener('click', async () => {
 
 document.getElementById('clear').addEventListener('click', async () => {
   if (!confirm('Delete all saved phones and photos from the extension?')) return;
-  const keys = (await loadPhones()).flatMap((p) => [`phone:${p.id}`, `photos:${p.id}`, `prices:${p.id}`]);
+  const keys = (await loadPhones()).flatMap((p) => [`phone:${p.id}`, `photos:${p.id}`, `prices:${p.id}`, `binkies:${p.id}`]);
   await chrome.storage.local.remove(keys);
   refresh();
 });

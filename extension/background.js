@@ -1,8 +1,14 @@
 /* Fetches GSMArena image files for the content script. Runs in the extension's
  * service worker, which has host permissions, so the page's cross-site limits do not apply.
  * Only GSMArena image hosts are allowed. */
-const ALLOWED_HOSTS = new Set(['www.gsmarena.com', 'fdn.gsmarena.com', 'fdn2.gsmarena.com']);
+const ALLOWED_HOSTS = new Set([
+  'www.gsmarena.com', 'fdn.gsmarena.com', 'fdn2.gsmarena.com', // GSMArena photos
+  'images.priceoye.pk', // PriceOye product photos
+  'engage-content.binkies3d.com', 'engage-content2.binkies3d.com', 'render.binkies3d.com', // Binkies 3D images
+]);
+const BINKIES_HOSTS = new Set(['engage-content.binkies3d.com', 'engage-content2.binkies3d.com', 'render.binkies3d.com']);
 const MAX_IMAGE_BYTES = 3 * 1024 * 1024;
+const MAX_BINKIES_BYTES = 25 * 1024 * 1024;
 
 function bytesToBase64(bytes) {
   let bin = '';
@@ -21,7 +27,8 @@ async function fetchImage(urlText) {
   const res = await fetch(url.href, { credentials: 'omit' });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const blob = await res.blob();
-  if (blob.size > MAX_IMAGE_BYTES) throw new Error('image too large');
+  const limit = BINKIES_HOSTS.has(url.hostname) ? MAX_BINKIES_BYTES : MAX_IMAGE_BYTES;
+  if (blob.size > limit) throw new Error('image too large');
   const type = blob.type && blob.type.startsWith('image/') ? blob.type : 'image/jpeg';
   const b64 = bytesToBase64(new Uint8Array(await blob.arrayBuffer()));
   return `data:${type};base64,${b64}`;
