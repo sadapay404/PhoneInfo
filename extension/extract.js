@@ -64,7 +64,18 @@
    * other phones, ads, and related images, so the file name or folder must match
    * the phone's own slug exactly. "oneplus-15-pro-1.jpg" does NOT match "oneplus-15".
    */
-  function isPhoneImage(url, slugs) {
+  /** Letters and digits only, lower case: "Infinix Note 60 Pro" and "infinix-note60-pro" compare equal after this. */
+  function nameKey(s) {
+    return String(s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  }
+
+  /**
+   * `opts` (optional): { name, alt }. GSMArena sometimes drops separators in file names
+   * ("infinix-note60-pro-12.jpg" for "infinix_note_60_pro_5g"), so the file name alone
+   * can miss a phone's own photos. The image's alt text is the phone's full name, and
+   * is accepted when it matches the name exactly.
+   */
+  function isPhoneImage(url, slugs, opts) {
     let u;
     try {
       u = new URL(url);
@@ -75,6 +86,9 @@
     const path = u.pathname.toLowerCase();
     const base = path.split('/').pop();
     const dirs = path.split('/');
+    if (opts && opts.name && opts.alt && nameKey(opts.alt) === nameKey(opts.name) && /\/vv\/(pics|bigpic)\//.test(path)) {
+      return true;
+    }
     return slugs.some((slug) => {
       const esc = slug.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       if (/\/vv\/pics\//.test(path) && new RegExp(`^${esc}-\\d+\\.(jpe?g|png|webp)$`).test(base)) return true;
@@ -96,7 +110,7 @@
     return [...views].map(([view, url]) => ({ view, url }));
   }
 
-  const api = { extractPage, modelSlugs, isPhoneImage, findThreeDViews };
+  const api = { extractPage, modelSlugs, isPhoneImage, findThreeDViews, nameKey };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.AetherExtract = api;
 })(typeof globalThis !== 'undefined' ? globalThis : window);

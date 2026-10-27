@@ -13,7 +13,7 @@
    * Photos that belong to THIS phone only, from its Pictures page, plus its 3D preview views.
    * The page also lists other phones and unrelated images; those are filtered out by file name.
    */
-  async function collectGallery(deviceUrl) {
+  async function collectGallery(deviceUrl, phoneName) {
     const picUrl = deviceUrl.replace(/-(\d+)\.php(?:[?#].*)?$/, '-pictures-$1.php');
     const threed = [];
     const res = await fetch(picUrl, { credentials: 'omit' });
@@ -24,7 +24,7 @@
 
     const seen = new Set();
     const items = [];
-    const add = (raw) => {
+    const add = (raw, alt) => {
       if (!raw) return;
       let u;
       try {
@@ -33,15 +33,15 @@
         return;
       }
       if (!/\.(jpe?g|png|webp)$/i.test(u)) return;
-      if (!window.AetherExtract.isPhoneImage(u, slugs)) return;
+      if (!window.AetherExtract.isPhoneImage(u, slugs, { name: phoneName, alt })) return;
       const key = u.split('/').pop().toLowerCase(); // same file at another size: keep the first seen
       if (seen.has(key)) return;
       seen.add(key);
       items.push({ kind: /\/imgroot\/reviews\//.test(u) ? 'review' : 'official', url: u });
     };
     // Full-size links come first, so they win over thumbnails.
-    doc.querySelectorAll('a[href]').forEach((a) => add(a.getAttribute('href')));
-    doc.querySelectorAll('img[src]').forEach((img) => add(img.getAttribute('src')));
+    doc.querySelectorAll('a[href]').forEach((a) => add(a.getAttribute('href'), a.querySelector('img') && a.querySelector('img').getAttribute('alt')));
+    doc.querySelectorAll('img[src]').forEach((img) => add(img.getAttribute('src'), img.getAttribute('alt')));
 
     threed.push(...window.AetherExtract.findThreeDViews(html));
     return {
@@ -74,7 +74,7 @@
       if (!raw.name || Object.keys(raw.specs).length === 0) throw new Error('No specs found on this page');
 
       button.textContent = 'Finding photos…';
-      const gallery = await collectGallery(location.href);
+      const gallery = await collectGallery(location.href, raw.name);
       const photos = [];
       let done = 0;
       for (const item of gallery.items) {

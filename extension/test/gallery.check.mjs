@@ -79,3 +79,19 @@ test('two phones with the same name get separate folders', () => {
   ]);
   assert.deepEqual(names, ['OnePlus 15', 'OnePlus 15 (2)', 'Apple iPhone 15']);
 });
+
+// Regression: GSMArena file names can drop separators ("acme-nova60-pro-12.jpg" for
+// "acme_nova_60_pro_5g"). The image's alt text (the full phone name) must still match.
+test('keeps every photo of a phone whose file names drop separators', () => {
+  const slugs = extract.modelSlugs('https://www.gsmarena.com/acme_nova_60_pro_5g-99998.php');
+  const name = 'Acme Nova 60 Pro';
+  const photo = (file) => `https://fdn2.gsmarena.com/vv/pics/acme/${file}`;
+  assert.equal(extract.isPhoneImage(photo('acme-nova60-pro-12.jpg'), slugs, { name, alt: name }), true);
+  assert.equal(extract.isPhoneImage(photo('acme-nova60-pro-11.jpg'), slugs, { name, alt: name }), true);
+  assert.equal(extract.isPhoneImage('https://fdn2.gsmarena.com/vv/bigpic/acme-nova60-pro.jpg', slugs, { name, alt: name }), true);
+  // Other models must still be rejected, even when their names start the same way.
+  assert.equal(extract.isPhoneImage(photo('acme-nova-60-pro-max-1.jpg'), slugs, { name, alt: 'Acme Nova 60 Pro Max' }), false);
+  assert.equal(extract.isPhoneImage(photo('acme-nova-60-1.jpg'), slugs, { name, alt: 'Acme Nova 60' }), false);
+  // Alt text alone is not enough outside the photo folders (e.g. an ad host).
+  assert.equal(extract.isPhoneImage('https://example.com/ad.jpg', slugs, { name, alt: name }), false);
+});
