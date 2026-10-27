@@ -6,8 +6,6 @@ name: Android APK
 
 on:
   workflow_dispatch:
-  push:
-    branches: [arena/af213546-phoneinfo]   # TEMPORARY: remove after this build
 
 permissions:
   contents: read
