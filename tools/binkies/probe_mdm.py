@@ -136,10 +136,27 @@ def main():
     if len(streams) > 40:
         print(f'  ... {len(streams) - 40} more')
 
-    # Readable text anywhere in the file (names of textures, meshes, materials).
-    print('\n--- readable strings in the raw file, first 60 ---')
-    for m in list(re.finditer(rb'[\x20-\x7e]{6,}', raw))[:60]:
-        print(f'  {m.start():8d}  {m.group()[:100].decode("ascii", "replace")}')
+    # Length of the repeating (13, 16) record table that starts at offset 0x14.
+    end = 0x14
+    while end + 8 <= len(raw) and struct.unpack_from('<II', raw, end) == (13, 16):
+        end += 8
+    print(f'\n--- repeating (13,16) records: from 0x14 to 0x{end:x} ({(end - 0x14) // 8} records) ---')
+    print('next 32 bytes after the table:', raw[end:end + 32].hex(' '))
+
+    # Boundary where entropy changes near 0x7000 and 0x1d000.
+    for start in (0x6fe0, 0x1cfe0, 0x1d000):
+        print(f'\n--- hex around 0x{start:x} ---')
+        print(hexdump(raw[start:start + 96], start, 96))
+
+    # All readable strings, longer than 5 characters.
+    print('\n--- ALL readable strings (offset, text) ---')
+    for m in re.finditer(rb'[\x20-\x7e]{6,}', raw):
+        print(f'  {m.start():8d}  {m.group()[:200].decode("ascii", "replace")}')
+
+    # Texture-like names, anywhere in the file.
+    print('\n--- texture / mesh-like names ---')
+    for m in re.finditer(rb'[\w\-./]{3,}\.(?:jpe?g|png|webp|ktx2?|dds|hdr|bin|mdm|glb)', raw, re.I):
+        print(f'  {m.start():8d}  {m.group().decode("ascii", "replace")}')
 
 
 if __name__ == '__main__':
