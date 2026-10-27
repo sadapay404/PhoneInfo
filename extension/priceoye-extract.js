@@ -169,7 +169,30 @@
     document.body.append(button);
   }
 
+  /** Automatic run: once per phone per day, when the setting is on. Same work as pressing the button. */
+  async function autoRunIfDue() {
+    const settings = (await chrome.storage.local.get('settings')).settings || {};
+    if (settings.autoSave === false) return;
+    const slug = C.productFromPath(location.pathname).slug;
+    const key = `autoPriceOye:${slug}`;
+    const today = todayIso();
+    if ((await chrome.storage.local.get(key))[key] === today) return;
+    await sleep(2000); // let the page finish loading first
+    const button = document.getElementById('aether-save');
+    if (!button || button.disabled) return;
+    button.disabled = true;
+    try {
+      await run((t) => { button.textContent = t; });
+      await chrome.storage.local.set({ [key]: today });
+    } catch (err) {
+      button.textContent = `Failed: ${err && err.message ? err.message : err}`;
+    } finally {
+      button.disabled = false;
+    }
+  }
+
   if (!C.productFromPath(location.pathname)) return; // only on phone pages
-  if (document.body) addButton();
-  else document.addEventListener('DOMContentLoaded', addButton);
+  const start = () => { addButton(); void autoRunIfDue(); };
+  if (document.body) start();
+  else document.addEventListener('DOMContentLoaded', start);
 })();

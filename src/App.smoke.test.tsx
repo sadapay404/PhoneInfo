@@ -89,6 +89,14 @@ describe('PhoneFinder smoke', () => {
     expect(el.querySelectorAll('.matrix td.win').length).toBeGreaterThan(0);
   });
 
+  it('shows the Library with a ZIP import on first open', () => {
+    const el = render('#/library');
+    expect(el.querySelector('.dropzone')).not.toBeNull();
+    expect(el.textContent).toContain('Add your ZIP to save every phone for offline use');
+    expect(el.textContent).toContain('No saved phones yet');
+    expect(el.querySelectorAll('.bottom-nav button').length).toBe(4);
+  });
+
   it('renders each tool tab', () => {
     const el = render('#/tools');
     expect(el.textContent).toContain('Battery endurance');

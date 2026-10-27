@@ -26,6 +26,8 @@ a filter sheet. There is no phone frame.
   categorized cards. Unknown fields are shown as unknown, never guessed.
 - **Compare** (`#/compare`): up to four phones, with a per-row winner, a "differences only"
   filter, and adjustable category weights for the overall score.
+- **Library** (`#/library`): add your AetherPhone ZIP in one step (drop it anywhere in the app, or
+  choose it). Every saved phone, photo and PKR price is stored on the device for offline use.
 - **Tools**: battery endurance estimate, camera sensor size, and value per dollar.
 
 ## Architecture
@@ -102,15 +104,17 @@ The `extension/` folder is a Chrome/Edge extension. It runs entirely in your bro
 server and no data sent anywhere.
 
 1. Open a phone page on gsmarena.com (any page with a spec table).
-2. Click **Save to AetherPhone** (bottom right). The page's specs, every official photo
-   (all angles and colours), and the review photos are copied into the extension. Only
-   phone-specific images are kept. 3D: the four preview views are saved as links (they load
-   online from Binkies 3D, the same as GSMArena's page), plus a link to the interactive viewer.
-   The 3D models themselves are not downloaded.
+2. The phone is saved **automatically** when you open its page, if it is not saved yet. You can
+   also click **Save to AetherPhone** (bottom right) to save or update it. The page's specs,
+   every official photo (all angles and colours), and the review photos are copied into the
+   extension. Only phone-specific images are kept. 3D: the four preview views are saved as links
+   (they load online from Binkies 3D, the same as GSMArena's page), plus a link to the interactive
+   viewer. The 3D models themselves are not downloaded. A phone you already saved is never
+   overwritten by the automatic save. Turn automatic saving off in the extension's popup.
 3. Click the extension icon, then **Export ZIP** to download `aetherphone-saved.zip`. Each
    phone gets its own folder named after the phone (for example `photos/OnePlus 15/`).
-4. In the app, open **Tools → Saved phones** and **Import ZIP**. Saved phones and their
-   photos appear in PhoneFinder and work offline on that device.
+4. In the app, open **Library** and add the ZIP (or drop it anywhere in the app). All phones,
+   photos and prices are saved on that device, and they appear in Phones and open offline.
 
 Notes:
 - Saved data stays on your device. Do not publish it or commit it to git.
@@ -129,9 +133,10 @@ The 3D model file itself is never saved. The files are exported in the ZIP under
 own record of the viewer's requests, so nothing is guessed. Binkies 3D content is used under
 the personal-use permission you have described; keep it for personal use only.
 
-**PKR prices from PriceOye (version 0.5.1).** On a PriceOye phone page (`priceoye.pk/mobiles/brand/model`),
-click **Save to AetherPhone** (bottom right, the same button and position as on GSMArena). The
-button shows its progress as it works:
+**PKR prices from PriceOye (version 0.6.0).** On a PriceOye phone page (`priceoye.pk/mobiles/brand/model`),
+click **Save to AetherPhone** (bottom right, the same button and position as on GSMArena). It also
+saves automatically once a day when you open a phone page, if automatic saving is on. The button
+shows its progress as it works:
 
 - If the phone is already saved from GSMArena (same brand and model), it saves the PKR price for
   every RAM/storage variant, plus facts GSMArena lacks (rating, review count, warranty, whether the
@@ -166,3 +171,21 @@ Limits:
   the full catalog locally (for example in Cloud Shell) and keep that APK private.
 - The APK is debug-signed. To install it, allow installs from unknown sources on the phone.
   A release build needs a signing key, which is not set up.
+
+## Preview the app in Google Cloud Shell (before any APK build)
+
+Run these in Cloud Shell (Google Cloud console → Activate Cloud Shell):
+
+```bash
+git clone https://github.com/sadapay404/PhoneInfo.git
+cd PhoneInfo
+git checkout arena/af213546-phoneinfo
+npm ci
+npm run dev
+```
+
+Then click **Web Preview → Preview on port 3000**. The app opens in a new tab. Use **Library** to add
+your ZIP. The ZIP's data stays in that browser only.
+
+To stop the preview, press Ctrl+C in the Cloud Shell terminal.
+

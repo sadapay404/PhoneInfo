@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-export type Tab = 'finder' | 'compare' | 'tools';
+export type Tab = 'finder' | 'compare' | 'library' | 'tools';
 export type View = Tab | 'device';
 export type Theme = 'dark' | 'light';
 
@@ -10,13 +10,14 @@ export interface Route {
   query: string;
 }
 
-/** #/finder?x=y · #/device/<id> · #/compare · #/tools (legacy #/catalog maps to finder). */
+/** #/finder?x=y · #/device/<id> · #/compare · #/library · #/tools (legacy #/catalog maps to finder). */
 export function parseHash(hash: string): Route {
   const [pathPart, query = ''] = hash.replace(/^#\/?/, '').split('?');
   const [head = 'finder', id = null] = pathPart.split('/');
   if (head === 'device' && id) return { view: 'device', id: decodeURIComponent(id), query };
   if (head === 'compare') return { view: 'compare', id: null, query };
   if (head === 'tools') return { view: 'tools', id: null, query };
+  if (head === 'library') return { view: 'library', id: null, query };
   return { view: 'finder', id: null, query };
 }
 

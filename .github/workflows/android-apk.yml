@@ -1,11 +1,10 @@
-# Builds the Android debug APK. Runs on every push to an arena/ branch or main, and on demand.
+# Builds the Android debug APK. Runs only when started by hand (Actions tab, or
+# `gh workflow run android-apk.yml`), so it does not use Actions minutes on every push.
 # Uses only what is in the repo (the sample catalog). The full personal catalog is never
 # built here, because this repository is public and build artifacts are downloadable.
 name: Android APK
 
 on:
-  push:
-    branches: ['arena/**', 'main']
   workflow_dispatch:
 
 permissions:

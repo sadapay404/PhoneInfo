@@ -2,7 +2,7 @@
 import JSZip from 'jszip';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { db } from './db';
-import { deleteSavedPhone, importSavedFile, loadPhotos, parseSavedJson } from './savedPhones';
+import { deleteSavedPhone, importFiles, importSavedFile, loadPhotos, parseSavedJson } from './savedPhones';
 
 // A valid 1x1 PNG (synthetic test image).
 const PNG_1PX = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
@@ -60,5 +60,36 @@ describe('importSavedFile (ZIP with photos)', () => {
     zip.file('something.txt', 'hi');
     const file = new File([await zip.generateAsync({ type: 'blob' })], 'bad.zip', { type: 'application/zip' });
     await expect(importSavedFile(file)).rejects.toThrow(/aetherphone-saved\.json/);
+  });
+});
+
+describe('importFiles (save everything for offline use)', () => {
+  beforeEach(async () => {
+    await db.saved.clear();
+    await db.photos.clear();
+    await db.prices.clear();
+  });
+
+  it('imports several ZIPs, counts phones, photos and prices, and skips a bad file', async () => {
+    const zip = new JSZip();
+    zip.file('aetherphone-saved.json', JSON.stringify([{
+      id: 'saved-7', brand: 'Acme', model: 'Nova 7', year: 2024,
+      photos: [{ kind: 'official', file: 'photos/Acme/01.png' }],
+    }]));
+    zip.file('photos/Acme/01.png', PNG_1PX, { base64: true });
+    zip.file('aetherphone-prices.json', JSON.stringify([
+      { deviceId: 'saved-7', price_pkr: 99000, observed_on: '2026-10-01', shop: 'PriceOye', ram_gb: 8, storage_gb: 128 },
+    ]));
+    const good = new File([await zip.generateAsync({ type: 'arraybuffer' })], 'aetherphone-saved.zip', { type: 'application/zip' });
+    const broken = new File(['not a zip'], 'broken.zip', { type: 'application/zip' });
+
+    const result = await importFiles([good, broken]);
+    expect(result.files).toBe(1);
+    expect(result.phones).toBe(1);
+    expect(result.photos).toBe(1);
+    expect(result.prices).toBe(1);
+    expect(result.failed.map((f) => f.name)).toEqual(['broken.zip']);
+    expect(await db.saved.count()).toBe(1);
+    expect(await db.prices.count()).toBe(1);
   });
 });

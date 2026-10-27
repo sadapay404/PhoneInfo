@@ -29,7 +29,7 @@ const PAGE = `<!doctype html><html><head><title>VGO-TEL NEW 10 Price in Pakistan
 <script>function setP(p){document.getElementById('price').textContent='Rs'+p.toLocaleString('en-US')+' Rs'+(p+1350).toLocaleString('en-US');}</script>
 </body></html>`;
 
-async function runPage({ store, failUrl }) {
+async function runPage({ store, failUrl, click = true, waitFor }) {
   const dom = new JSDOM(PAGE, { url: 'https://priceoye.pk/mobiles/vgo-tel/vgo-tel-new-10', runScripts: 'dangerously' });
   const w = dom.window;
   const data = { ...store };
@@ -58,7 +58,8 @@ async function runPage({ store, failUrl }) {
   const btn = w.document.getElementById('aether-save');
   assert.ok(btn, 'button is added');
   assert.equal(btn.textContent, 'Save to AetherPhone');
-  btn.click();
+  if (click) btn.click();
+  else for (let i = 0; i < 120 && !(waitFor && data[waitFor]); i++) await sleep(50);
   for (let i = 0; i < 100 && btn.disabled; i++) await sleep(50);
   return { data, requested, note: btn.textContent, doc: w.document };
 }
@@ -112,4 +113,22 @@ test('a page that is not a phone page gets no button', () => {
   dom.window.eval(read('priceoye-core.js'));
   dom.window.eval(read('priceoye-extract.js'));
   assert.equal(dom.window.document.getElementById('aether-save'), null);
+});
+
+test('automatic save: runs once on open without a button press, and not again the same day', async () => {
+  const gsm = { id: 'saved-77', brand: 'Vgotel', model: 'New 10', year: 2025, soc: {} };
+  const first = await runPage({ store: { 'phone:saved-77': gsm }, click: false, waitFor: 'prices:saved-77' });
+  assert.equal(first.data['prices:saved-77'].length, 3, 'prices saved on open');
+  assert.ok(first.data['autoPriceOye:vgo-tel-new-10'], 'the day is recorded');
+  // Opening the page again the same day does nothing more.
+  const second = await runPage({ store: first.data, click: false });
+  await sleep(2600);
+  assert.equal(second.data['prices:saved-77'].length, 3);
+});
+
+test('automatic save: off when the setting is off', async () => {
+  const gsm = { id: 'saved-77', brand: 'Vgotel', model: 'New 10', year: 2025, soc: {} };
+  const { data } = await runPage({ store: { 'phone:saved-77': gsm, settings: { autoSave: false } }, click: false });
+  await sleep(2600);
+  assert.equal(data['prices:saved-77'], undefined);
 });

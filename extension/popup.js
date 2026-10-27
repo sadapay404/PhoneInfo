@@ -90,4 +90,14 @@ document.getElementById('clear').addEventListener('click', async () => {
   refresh();
 });
 
+const autosave = document.getElementById('autosave');
+async function loadSettings() {
+  const settings = (await chrome.storage.local.get('settings')).settings || {};
+  autosave.checked = settings.autoSave !== false;
+}
+autosave.addEventListener('change', async () => {
+  const settings = (await chrome.storage.local.get('settings')).settings || {};
+  await chrome.storage.local.set({ settings: { ...settings, autoSave: autosave.checked } });
+});
+void loadSettings();
 refresh();

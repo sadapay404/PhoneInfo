@@ -16,6 +16,12 @@ const PATHS = {
   cloud: 'M7 18a5 5 0 0 1-.9-9.9A6 6 0 0 1 18 9.5a4 4 0 0 1 .5 8.5z',
   cloudOff: 'M3 3l18 18M7 18a5 5 0 0 1-.9-9.9M10 6.2A6 6 0 0 1 18 9.5a4 4 0 0 1 2.5 7.5',
   arrowRight: 'M5 12h14m-6-6 6 6-6 6',
+  library: 'M4 5h4v14H4zM10 5h4v14h-4zM16.5 5.5l3.9 1-3.2 12.6-3.9-1z',
+  upload: 'M12 15V4m0 0-4 4m4-4 4 4M4 14v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4',
+  trash: 'M4 7h16M9 7V4.5h6V7M6.5 7l1 12.5h9l1-12.5',
+  wifi: 'M2.5 9a14 14 0 0 1 19 0M5.5 12.5a9.5 9.5 0 0 1 13 0M8.8 16a5 5 0 0 1 6.4 0M12 19.5h.01',
+  phone: 'M7.5 2.5h9a2 2 0 0 1 2 2v15a2 2 0 0 1-2 2h-9a2 2 0 0 1-2-2v-15a2 2 0 0 1 2-2zM11 18.5h2',
+  tag: 'M3 12V4a1 1 0 0 1 1-1h8l9 9-9 9zM7.5 7.5h.01',
 } as const;
 
 export type IconName = keyof typeof PATHS;

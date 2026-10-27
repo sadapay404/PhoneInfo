@@ -111,6 +111,10 @@ export interface Device {
   image?: string;
   /** Free-form provenance note, shown in the device header. */
   source_note?: string;
+  /** Extra facts from PriceOye for phones added from there (rating, warranty, status). Personal use. */
+  priceoye?: { url?: string; rating?: number; reviews?: number; discontinued?: boolean; warranty?: string; updated?: string };
+  /** Free-text note saved with the phone. */
+  note?: string;
   /** Full spec sheet as saved from a page: category -> label -> value. Shown on the detail page. */
   raw_specs?: Record<string, Record<string, string>>;
   /** Photo and 3D info for saved phones. Photos themselves are in the `photos` table. */

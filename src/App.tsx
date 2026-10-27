@@ -8,6 +8,7 @@ import { Finder } from './views/Finder';
 import { Detail } from './views/Detail';
 import { Compare } from './views/Compare';
 import { Tools } from './views/Tools';
+import { Library, requestImport } from './views/Library';
 import type { Facets } from './components/FilterPanel';
 import type { Device } from './data/types';
 
@@ -104,8 +105,9 @@ export function App() {
   };
 
   const nav: NavItem[] = [
-    { id: 'finder', label: 'Finder', icon: 'finder', count: undefined },
+    { id: 'finder', label: 'Phones', icon: 'finder' },
     { id: 'compare', label: 'Compare', icon: 'compare', count: compareIds.length },
+    { id: 'library', label: 'Library', icon: 'library' },
     { id: 'tools', label: 'Tools', icon: 'tools' },
   ];
 
@@ -122,8 +124,10 @@ export function App() {
     );
   } else if (route.view === 'compare') {
     page = <Compare devices={catalog.devices} selectedIds={compareIds} onChange={setCompareIds} onOpen={(id) => go(`device/${id}`)} />;
+  } else if (route.view === 'library') {
+    page = <Library onOpen={(id) => go(`device/${id}`)} />;
   } else if (route.view === 'tools') {
-    page = <Tools devices={catalog.devices} onOpen={(id) => go(`device/${id}`)} />;
+    page = <Tools devices={catalog.devices} />;
   } else {
     page = (
       <Finder
@@ -141,7 +145,24 @@ export function App() {
     );
   }
 
+  // Drop a ZIP anywhere in the app to save it for offline use.
+  const [dragging, setDragging] = useState(false);
+  const isFileDrag = (e: React.DragEvent) => Array.from(e.dataTransfer.types).includes('Files');
+  const dropProps = {
+    onDragOver: (e: React.DragEvent) => { if (isFileDrag(e)) { e.preventDefault(); setDragging(true); } },
+    onDragLeave: (e: React.DragEvent) => { if (e.currentTarget === e.target) setDragging(false); },
+    onDrop: (e: React.DragEvent) => {
+      if (!isFileDrag(e)) return;
+      e.preventDefault();
+      setDragging(false);
+      const files = Array.from(e.dataTransfer.files);
+      if (route.view !== 'library') go('library');
+      requestImport(files);
+    },
+  };
+
   return (
+    <div className="app-root" {...dropProps}>
     <Shell
       nav={nav}
       active={route.view === 'device' ? 'finder' : route.view}
@@ -157,6 +178,12 @@ export function App() {
       )}
       {page}
     </Shell>
+    {dragging && (
+      <div className="drop-overlay" aria-hidden="true">
+        <div><strong>Drop to save for offline use</strong><span>Your AetherPhone ZIP will be saved on this device.</span></div>
+      </div>
+    )}
+    </div>
   );
 }
 

@@ -57,6 +57,47 @@
     return reply && reply.ok ? reply.dataUrl : undefined;
   }
 
+  /** Reads the page, its photos and 3D views, and stores the phone. Used by the button and by auto-save. */
+  async function saveCurrentPage(status) {
+    const raw = window.AetherExtract.extractPage(document, location.href);
+    if (!raw.name || Object.keys(raw.specs).length === 0) throw new Error('No specs found on this page');
+
+    status('Finding photos…');
+    const gallery = await collectGallery(location.href, raw.name);
+    const photos = [];
+    let done = 0;
+    for (const item of gallery.items) {
+      status(`Saving photos ${done + 1}/${gallery.items.length}…`);
+      const dataUrl = await fetchPhoto(item.url);
+      if (dataUrl) photos.push({ kind: item.kind, source: item.url, dataUrl });
+      done++;
+      await sleep(PAUSE_MS);
+    }
+    if (photos.length === 0 && raw.image_url) {
+      const dataUrl = await fetchPhoto(raw.image_url);
+      if (dataUrl) photos.push({ kind: 'official', source: raw.image_url, dataUrl });
+    }
+
+    const main = photos.find((p) => p.kind === 'official') || photos[0];
+    const device = window.AetherMapper.toDevice(raw, {
+      imageDataUrl: main ? main.dataUrl : undefined,
+      savedOn: new Date().toISOString(),
+      gallery: { has_3d: gallery.has_3d, pictures_url: gallery.pictures_url, photo_count: photos.length, threed_views: gallery.threed_views },
+    });
+    // Photos live under their own key so the phone list stays small.
+    const stored = photos.map((p, i) => ({ ...p, file: `${String(i + 1).padStart(2, '0')}-${p.kind}` }));
+    await chrome.storage.local.set({
+      [`phone:${device.id}`]: device,
+      [`photos:${device.id}`]: stored,
+    });
+    return { device, photoCount: photos.length };
+  }
+
+  const gsmPhoneId = () => {
+    const m = /-(\d+)\.php/.exec(location.href);
+    return m ? `saved-${m[1]}` : null;
+  };
+
   const button = document.createElement('button');
   button.id = 'aether-save';
   button.textContent = 'Save to AetherPhone';
@@ -67,49 +108,37 @@
     boxShadow: '0 6px 20px rgba(0,0,0,.25)',
   });
 
-  button.addEventListener('click', async () => {
+  const setStatus = (text, color) => {
+    button.textContent = text;
+    if (color) button.style.background = color;
+  };
+
+  async function runSave(auto) {
     button.disabled = true;
     try {
-      const raw = window.AetherExtract.extractPage(document, location.href);
-      if (!raw.name || Object.keys(raw.specs).length === 0) throw new Error('No specs found on this page');
-
-      button.textContent = 'Finding photos…';
-      const gallery = await collectGallery(location.href, raw.name);
-      const photos = [];
-      let done = 0;
-      for (const item of gallery.items) {
-        button.textContent = `Saving photos ${done + 1}/${gallery.items.length}…`;
-        const dataUrl = await fetchPhoto(item.url);
-        if (dataUrl) photos.push({ kind: item.kind, source: item.url, dataUrl });
-        done++;
-        await sleep(PAUSE_MS);
-      }
-      if (photos.length === 0 && raw.image_url) {
-        const dataUrl = await fetchPhoto(raw.image_url);
-        if (dataUrl) photos.push({ kind: 'official', source: raw.image_url, dataUrl });
-      }
-
-      const main = photos.find((p) => p.kind === 'official') || photos[0];
-      const device = window.AetherMapper.toDevice(raw, {
-        imageDataUrl: main ? main.dataUrl : undefined,
-        savedOn: new Date().toISOString(),
-        gallery: { has_3d: gallery.has_3d, pictures_url: gallery.pictures_url, photo_count: photos.length, threed_views: gallery.threed_views },
-      });
-      // Photos live under their own key so the phone list stays small.
-      const stored = photos.map((p, i) => ({ ...p, file: `${String(i + 1).padStart(2, '0')}-${p.kind}` }));
-      await chrome.storage.local.set({
-        [`phone:${device.id}`]: device,
-        [`photos:${device.id}`]: stored,
-      });
-      button.textContent = `Saved ${device.brand} ${device.model} · ${photos.length} photos`;
-      button.style.background = '#1f8a4c';
+      const { device, photoCount } = await saveCurrentPage((t) => setStatus(t));
+      setStatus(`${auto ? 'Auto-saved' : 'Saved'} ${device.brand} ${device.model} · ${photoCount} photos`, '#1f8a4c');
     } catch (err) {
-      button.textContent = `Failed: ${err.message}`;
-      button.style.background = '#b42318';
+      setStatus(`Failed: ${err.message}`, '#b42318');
     } finally {
       button.disabled = false;
     }
-  });
+  }
+
+  button.addEventListener('click', () => runSave(false));
+
+  // Automatic save: when the phone is not saved yet and the setting is on. A phone already saved is left alone.
+  async function autoSaveIfNew() {
+    const settings = (await chrome.storage.local.get('settings')).settings || {};
+    if (settings.autoSave === false) return;
+    const id = gsmPhoneId();
+    if (!id) return;
+    const already = (await chrome.storage.local.get(`phone:${id}`))[`phone:${id}`];
+    if (already) return;
+    await sleep(1500); // let the page finish loading first
+    await runSave(true);
+  }
 
   document.body.appendChild(button);
+  void autoSaveIfNew();
 })();

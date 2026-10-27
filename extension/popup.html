@@ -16,11 +16,17 @@
   button.primary { background: #2f5bea; border-color: #2f5bea; color: #fff; }
   footer { display: flex; gap: 8px; padding: 10px 14px; border-top: 1px solid #e5e7eb; }
   .empty { display: block; padding: 18px 14px; color: #6b7280; }
+  .setting { display: flex; gap: 10px; align-items: flex-start; padding: 10px 14px; border-top: 1px solid #e5e7eb; font-size: 13px; line-height: 1.4; }
+  .setting small { color: #6b7280; display: block; }
 </style>
 </head>
 <body>
 <header><strong>AetherPhone Saver</strong><span id="count" style="color:#6b7280"></span></header>
 <ul id="list"></ul>
+<div class="setting">
+  <input type="checkbox" id="autosave" checked />
+  <label for="autosave"><strong>Save automatically</strong><small>When you open a GSMArena phone page that is not saved yet, or a PriceOye phone page (once a day), save it without pressing the button.</small></label>
+</div>
 <footer>
   <button class="primary" id="export">Export ZIP</button>
   <button id="clear">Delete all</button>
