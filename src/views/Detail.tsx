@@ -6,6 +6,7 @@ import { CATEGORIES, SPEC_FIELDS, formatValue, getPath } from '../data/specs';
 import { compareDevices } from '../lib/compare';
 import { Box, Stat } from '../components/Box';
 import { DeviceImage } from '../components/DeviceImage';
+import { PkrPrices } from '../components/PkrPrices';
 import { Icon } from '../components/Icon';
 
 /** Categories this phone leads across the whole catalog (computed once per catalog). */
@@ -92,6 +93,8 @@ export function Detail({ device, all, inCompare, onBack, onToggleCompare }: {
           );
         })}
       </div>
+
+      <PkrPrices device={device} />
 
       {device.raw_specs && (
         <section className="raw-specs">

@@ -48,7 +48,10 @@ export interface Device {
     cpu?: string;
     gpu?: string;
     ram_gb?: number;
+    ram_options_gb?: number[];   // every RAM size the page lists
     storage_gb?: number[];
+    /** Exact RAM and storage pairs when the page lists them ("256GB 12GB RAM"). */
+    variants?: { storage_gb: number; ram_gb: number }[];
   };
 
   camera: {

@@ -66,7 +66,12 @@
     const chipset = cell('Platform', 'Chipset').replace(/\s*\(\d+\s*nm\)\s*$/, '') || undefined;
     const memory = cat('Memory');
     const ramGb = num(first(memory, /(\d+)\s*GB\s*RAM/));
-    const storage = [...new Set([...memory.matchAll(/(\d+)\s*GB(?!\s*RAM)/g)].map((m) => Number(m[1])))];
+    // Storage in GB ("256GB", "1TB" -> 1024). Exact pairs such as "256GB 12GB RAM" are kept as variants.
+    const toGb = (n, unit) => (/tb/i.test(unit) ? Number(n) * 1024 : Number(n));
+    const storage = [...new Set([...memory.matchAll(/(\d+)\s*(GB|TB)(?!\s*RAM)/gi)].map((m) => toGb(m[1], m[2])))];
+    const ramOptions = [...new Set([...memory.matchAll(/(\d+)\s*GB\s*RAM/gi)].map((m) => Number(m[1])))];
+    const variants = [...memory.matchAll(/(\d+)\s*(GB|TB)\s+(\d+)\s*GB\s*RAM/gi)]
+      .map((m) => ({ storage_gb: toGb(m[1], m[2]), ram_gb: Number(m[3]) }));
     const socBrand = /Snapdragon|Qualcomm/i.test(chipset) ? 'Snapdragon'
       : /Dimensity|MediaTek|Helio/i.test(chipset) ? 'Dimensity'
       : /Exynos/i.test(chipset) ? 'Exynos'
@@ -142,7 +147,9 @@
         cpu: cell('Platform', 'CPU') || undefined,
         gpu: cell('Platform', 'GPU') || undefined,
         ram_gb: ramGb,
+        ram_options_gb: ramOptions.length ? ramOptions.sort((a, b) => a - b) : undefined,
         storage_gb: storage.length ? storage.sort((a, b) => a - b) : undefined,
+        variants: variants.length ? variants : undefined,
       },
       camera,
       memory: { expandable: /microSD/i.test(memory) || undefined },

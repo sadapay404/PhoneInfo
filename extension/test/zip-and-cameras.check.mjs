@@ -52,3 +52,17 @@ test('gallery info is stored on the device', () => {
   );
   assert.deepEqual(d.gallery, { has_3d: true, pictures_url: 'https://www.gsmarena.com/a-pictures-2.php', photo_count: 12 });
 });
+
+test('memory parsing keeps exact RAM and storage pairs and converts TB', () => {
+  const d = toDevice({
+    name: 'Acme Max', url: 'https://www.gsmarena.com/a-3.php', image_url: null,
+    specs: { Memory: { Internal: '256GB 12GB RAM, 512GB 12GB RAM, 1TB 16GB RAM' } },
+  });
+  assert.deepEqual(d.soc.storage_gb, [256, 512, 1024]);
+  assert.deepEqual(d.soc.ram_options_gb, [12, 16]);
+  assert.deepEqual(d.soc.variants, [
+    { storage_gb: 256, ram_gb: 12 },
+    { storage_gb: 512, ram_gb: 12 },
+    { storage_gb: 1024, ram_gb: 16 },
+  ]);
+});

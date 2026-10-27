@@ -422,3 +422,20 @@ input[type='search'], input[type='number'], select { font-size: 15px; }
 .threed-grid figure { margin: 0; text-align: center; background: var(--img-bg); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 8px; }
 .threed-grid img { width: 100%; height: auto; min-height: 96px; object-fit: contain; }
 .threed-grid figcaption { font-size: 12px; color: var(--muted); text-transform: capitalize; }
+
+/* PKR price log */
+.prices { margin-top: 2rem; }
+.price-list { list-style: none; padding: 0; margin: 0 0 1.25rem; display: grid; gap: .5rem; }
+.price-row { border: 1px solid var(--line, #e3e6ea); border-radius: 10px; padding: .75rem 1rem; }
+.price-main { display: flex; justify-content: space-between; align-items: center; gap: .5rem; flex-wrap: wrap; }
+.price-value { font-weight: 700; display: inline-flex; gap: .5rem; align-items: center; }
+.tag-warn { background: #fff4d6; color: #7a5200; }
+.link-btn { background: none; border: 0; color: inherit; text-decoration: underline; cursor: pointer; padding: 0 0 0 .5rem; font: inherit; }
+.price-history { margin: .5rem 0 0; padding-left: 1.25rem; font-size: .9rem; }
+.price-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: .75rem; align-items: end; }
+.price-form label { display: grid; gap: .25rem; font-size: .9rem; }
+.price-form input, .price-form select { padding: .5rem; border-radius: 8px; border: 1px solid #c9ced6; font: inherit; min-width: 0; }
+.price-note { grid-column: span 2; }
+.price-form .btn { justify-self: start; }
+.error { color: #b00020; }
+@media (max-width: 480px) { .price-note { grid-column: auto; } }
