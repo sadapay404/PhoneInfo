@@ -1,32 +1,53 @@
 #!/usr/bin/env python3
-"""Probe a Binkies .mdm.br file and print its structure, so a decoder can be written.
+"""Probe a Binkies .mdm / .mdm.br file and print its structure, so a decoder can be written.
 
-Run on YOUR OWN copy of a file you downloaded with permission. Prints only short
-summaries (header bytes, which offset starts the Brotli stream, a sample of the
-decompressed bytes, and the names of textures or meshes it mentions). It does not
-write any model data anywhere.
+Run on YOUR OWN copy of a file you downloaded with permission. Prints short summaries only:
+a hex dump of the header, where compressed sections start (Brotli, zlib, gzip, zstd, lz4),
+how random each block of the file looks, and the first little-endian 32-bit values.
+It does not write any model data anywhere.
 
-Usage:
-  pip install brotli
-  python3 probe_mdm.py scene.mdm.br > probe.txt
+Usage (Windows PowerShell or Command Prompt, not the Python >>> prompt):
+  py -m pip install brotli
+  py probe_mdm.py scene.mdm.br > probe.txt
 """
+import math
 import re
 import struct
 import sys
+import zlib
 
 try:
     import brotli  # pip install brotli
 except ImportError:
-    sys.exit('Install the brotli package first: pip install brotli')
+    sys.exit('Install the brotli package first: py -m pip install brotli')
 
-MAX_OFFSET = 512
+SCAN_LIMIT = 200_000  # bytes scanned for compressed-stream starts
 
 
-def try_brotli_at(raw, offset):
-    """Return decompressed bytes if a Brotli stream starts at `offset`, else None."""
+def hexdump(data, start=0, length=256):
+    lines = []
+    for i in range(0, min(length, len(data)), 16):
+        chunk = data[i:i + 16]
+        hx = ' '.join(f'{b:02x}' for b in chunk)
+        asc = ''.join(chr(b) if 32 <= b < 127 else '.' for b in chunk)
+        lines.append(f'{start + i:08x}  {hx:<47}  {asc}')
+    return '\n'.join(lines)
+
+
+def entropy(block):
+    if not block:
+        return 0.0
+    counts = [0] * 256
+    for b in block:
+        counts[b] += 1
+    n = len(block)
+    return -sum((c / n) * math.log2(c / n) for c in counts if c)
+
+
+def try_brotli(raw, off):
     try:
         d = brotli.Decompressor()
-        out = d.process(raw[offset:])
+        out = d.process(raw[off:])
         if out and d.is_finished():
             return out
     except brotli.error:
@@ -34,54 +55,91 @@ def try_brotli_at(raw, offset):
     return None
 
 
-def printable_strings(data, min_len=4, limit=60):
-    seen = []
-    for m in re.finditer(rb'[\x20-\x7e]{%d,}' % min_len, data):
-        s = m.group().decode('ascii', 'replace')
-        seen.append((m.start(), s))
-        if len(seen) >= limit:
-            break
-    return seen
+def try_zlib(raw, off):
+    try:
+        d = zlib.decompressobj()
+        out = d.decompress(raw[off:])
+        if out and d.eof:
+            return out
+    except zlib.error:
+        return None
+    return None
+
+
+def try_gzip(raw, off):
+    try:
+        d = zlib.decompressobj(16 + zlib.MAX_WBITS)
+        out = d.decompress(raw[off:])
+        if out and d.eof:
+            return out
+    except zlib.error:
+        return None
+    return None
+
+
+MAGICS = [
+    ('gzip', b'\x1f\x8b', try_gzip),
+    ('zstd', b'\x28\xb5\x2f\xfd', None),
+    ('lz4', b'\x04\x22\x4d\x18', None),
+]
+
+
+def scan_streams(raw):
+    found = []
+    limit = min(SCAN_LIMIT, len(raw))
+    for off in range(limit):
+        b0 = raw[off]
+        # zlib starts with 0x78 and a valid check byte (CMF/FLG check).
+        if b0 == 0x78 and off + 1 < len(raw) and (b0 * 256 + raw[off + 1]) % 31 == 0:
+            out = try_zlib(raw, off)
+            if out:
+                found.append(('zlib', off, len(out)))
+        for name, magic, fn in MAGICS:
+            if raw.startswith(magic, off) and fn:
+                out = fn(raw, off)
+                if out:
+                    found.append((name, off, len(out)))
+            elif raw.startswith(magic, off):
+                found.append((name + ' (magic only)', off, 0))
+        out = try_brotli(raw, off)
+        if out:
+            found.append(('brotli', off, len(out)))
+    return found
 
 
 def main():
     path = sys.argv[1]
     raw = open(path, 'rb').read()
     print(f'file: {path}')
-    print(f'size: {len(raw)} bytes')
-    print(f'first 64 bytes (hex): {raw[:64].hex(" ")}')
-    print(f'first 64 bytes (ascii): {raw[:64]!r}')
+    print(f'size: {len(raw)} bytes\n')
 
-    stream = None
-    stream_offset = None
-    for off in range(0, min(MAX_OFFSET, len(raw))):
-        out = try_brotli_at(raw, off)
-        if out:
-            stream, stream_offset = out, off
-            break
-    if stream is None:
-        print('No Brotli stream found in the first', MAX_OFFSET, 'bytes.')
-        print('Try: python3 probe_mdm.py <file> and send this output. Do not send the file.')
-        return
+    print('--- header hex dump (first 256 bytes) ---')
+    print(hexdump(raw, 0, 256))
 
-    print(f'Brotli stream starts at offset {stream_offset}')
-    print(f'decompressed size: {len(stream)} bytes')
-    print(f'header bytes before stream (hex): {raw[:stream_offset].hex(" ")}')
-    print(f'decompressed first 128 bytes (hex): {stream[:128].hex(" ")}')
+    print('\n--- first 32 little-endian uint32 values, from offset 0 ---')
+    vals = [struct.unpack_from('<I', raw, i)[0] for i in range(0, min(128, len(raw)), 4)]
+    print(' '.join(str(v) for v in vals))
 
-    # Little-endian integers near the start, often counts or sizes.
-    if len(stream) >= 32:
-        u32 = struct.unpack_from('<8I', stream, 0)
-        print(f'first 8 uint32 (LE): {list(u32)}')
+    print('\n--- entropy per 4 KB block (about 8.0 = compressed or encrypted, under 6 = structured) ---')
+    ent = []
+    for i in range(0, len(raw), 4096):
+        ent.append(f'{i:07x}:{entropy(raw[i:i + 4096]):.2f}')
+    for i in range(0, len(ent), 8):
+        print('  '.join(ent[i:i + 8]))
 
-    print('\nreadable strings (offset, text), first 60:')
-    for off, s in printable_strings(stream):
-        print(f'  {off:8d}  {s[:120]}')
+    print('\n--- compressed-stream starts found in the first', SCAN_LIMIT, 'bytes ---')
+    streams = scan_streams(raw)
+    if not streams:
+        print('none found')
+    for name, off, size in streams[:40]:
+        print(f'  {name:<22} offset={off:<8} decompressed={size}')
+    if len(streams) > 40:
+        print(f'  ... {len(streams) - 40} more')
 
-    names = sorted(set(re.findall(rb'[\w\-]+\.(?:jpe?g|png|webp|ktx2?|dds|hdr|bin)', stream, re.I)))
-    print(f'\nimage/texture file names mentioned: {len(names)}')
-    for n in names[:80]:
-        print('  ', n.decode('ascii', 'replace'))
+    # Readable text anywhere in the file (names of textures, meshes, materials).
+    print('\n--- readable strings in the raw file, first 60 ---')
+    for m in list(re.finditer(rb'[\x20-\x7e]{6,}', raw))[:60]:
+        print(f'  {m.start():8d}  {m.group()[:100].decode("ascii", "replace")}')
 
 
 if __name__ == '__main__':
