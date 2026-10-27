@@ -19,16 +19,17 @@ a filter sheet. There is no phone frame.
 
 ## What you get
 
-- **PhoneFinder** (`#/finder`): search (typo-tolerant), 20+ filter groups, quick presets
-  ("Marathon battery", "Camera flagships", "One-hand size"…), sorting, and active-filter chips.
-  Filters live in the URL, so a filtered view can be bookmarked or shared.
-- **Phone pages** (`#/device/<id>`): photo, headline numbers, and every known spec in
-  categorized cards. Unknown fields are shown as unknown, never guessed.
-- **Compare** (`#/compare`): up to four phones, with a per-row winner, a "differences only"
-  filter, and adjustable category weights for the overall score.
-- **Library** (`#/library`): add your AetherPhone ZIP in one step (drop it anywhere in the app, or
-  choose it). Every saved phone, photo and PKR price is stored on the device for offline use.
-- **Tools**: battery endurance estimate, camera sensor size, and value per dollar.
+- **Phones** (`#/phones`): search, quick picks, filters (brand, year, screen, refresh, RAM,
+  storage, battery, charging, camera, OS, must-have features) and sorting. Filters live in the
+  URL, so a filtered view can be bookmarked.
+- **Phone page** (`#/phone/<id>`): photos, key numbers, the full spec sheet, and PKR prices per
+  RAM and storage variant (with a 30-day "check again" flag).
+- **Compare** (`#/compare`): up to four phones, with a winner marked on each row and a
+  differences-only filter.
+- **Library** (`#/library`): add your AetherPhone ZIP (choose or drop). Phones, photos and PKR
+  prices are kept on this device for offline use.
+- **Tools** (`#/tools`): battery-life estimate and main camera sensor size.
+- Light and dark themes with soft, low-glare colours (dark follows the system by default).
 
 ## Architecture
 
@@ -95,7 +96,7 @@ src/
   data/             types.ts, specs.ts (field registry), seed.ts, db.ts (Dexie), catalogSync.ts
   hooks/            useCatalog (offline-first loading), useAppState (routing, theme, compare)
   components/       Shell, FilterPanel, DeviceImage, Box, Icon
-  views/            Finder, Detail, Compare, Tools
+  ui/               Phones, PhonePage, ComparePage, LibraryPage, ToolsPage (2026 redesign)
 ```
 
 ## Save phones from GSMArena in your browser (no server)
