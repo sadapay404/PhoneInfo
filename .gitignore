@@ -4,6 +4,9 @@ dist/
 .DS_Store
 # Generated catalog (rebuilt by npm run build / dev)
 public/catalog/
+# On-device model + ONNX Runtime files: fetched by scripts/fetch-model.mjs and scripts/copy-ort.mjs
+public/models/
+public/ort/
 # Personal GSMArena archive: never commit (terms of use + repo visibility)
 /data/
 __pycache__/

@@ -4,9 +4,11 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
+    "predev": "node scripts/fetch-model.mjs && node scripts/copy-ort.mjs",
     "dev": "npm run catalog:build && vite --host 0.0.0.0 --port 3000 --strictPort",
     "catalog:build": "node scripts/build-catalog.mjs",
     "catalog:build:full": "CATALOG_SOURCE=data/export/devices.json node scripts/build-catalog.mjs",
+    "prebuild": "node scripts/fetch-model.mjs && node scripts/copy-ort.mjs",
     "build": "npm run catalog:build && tsc --noEmit && vite build && rm -rf dist/catalog",
     "preview": "vite preview --host 0.0.0.0 --port 3000 --strictPort",
     "test": "vitest run",
@@ -20,6 +22,7 @@
     "fuse.js": "^7.0.0",
     "jszip": "^3.10.2",
     "lz-string": "^1.5.0",
+    "onnxruntime-web": "^1.22.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },

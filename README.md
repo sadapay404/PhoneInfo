@@ -26,8 +26,10 @@ a filter sheet. There is no phone frame.
   **Extra features** (stylus, gaming triggers, coatings, build, and anything else the source sheet
   lists that the table does not), the full spec sheet, and PKR prices per RAM and storage variant
   (with a 30-day "check again" flag).
-- Phone cards show a **transparent cut-out** of the photo (studio background removed with a soft
-  edge). Only thumbnails use it; the hero and gallery show the original.
+- Phone cards show a **transparent cut-out** of the photo. The background is removed on the
+  device by the ISNet model (MIT) running in a Web Worker with ONNX Runtime Web. Results are
+  cached, so each photo is processed once and then works offline. Only thumbnails use it; the
+  hero and gallery show the original. The first load downloads the ~88 MB model.
 - **Compare** (`#/compare`): up to four phones, with a winner marked on each row and a
   differences-only filter.
 - **Library** (`#/library`): add your AetherPhone ZIP (choose or drop). Phones, photos and PKR
@@ -163,12 +165,13 @@ visible page text, which may change without notice.
 Install: open `chrome://extensions`, turn on Developer mode, click **Load unpacked**, and
 choose the `extension` folder. Run its tests with `for f in extension/test/*.mjs; do node --test "$f"; done` (run `npm ci` first, so `jsdom` is installed).
 
-## Android APK (automatic build)
+## Android APK (manual build)
 
 The Android app is the same web app wrapped with Capacitor (`capacitor.config.json`,
-`android/`). `.github/workflows/android-apk.yml` builds a debug APK on GitHub Actions on every
-push to an `arena/` branch or `main`, and on demand. Download it from the workflow run's
-**Artifacts** list (`aetherphone-debug-apk`, kept 14 days).
+`android/`). `.github/workflows/android-apk.yml` builds a debug APK on GitHub Actions. It runs
+**only when started by hand** (Actions tab → Android APK → Run workflow, or
+`gh workflow run android-apk.yml --ref <branch>`), to save Actions minutes. Download it from the
+run's **Artifacts** list (`aetherphone-debug-apk`, kept 14 days).
 
 Limits:
 - The repository is public, and workflow artifacts can be downloaded by anyone with a GitHub

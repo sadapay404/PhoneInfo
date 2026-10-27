@@ -525,6 +525,8 @@ input[type='checkbox'] { accent-color: var(--accent); width: 16px; height: 16px;
   padding: 14px;
 }
 .phone-card-media .photo { max-height: 100%; width: auto; object-fit: contain; }
+/* Cut-outs get a soft shadow so pale phones still read against the light card. */
+.phone-card-media .photo[src^="blob:"] { filter: drop-shadow(0 8px 12px rgba(20, 24, 30, 0.22)); }
 .phone-card-body { padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 4px; }
 .phone-card-body h3 { font-size: 1.05rem; color: var(--text-strong); }
 .phone-card-facts { font-size: 0.86rem; color: var(--muted); }

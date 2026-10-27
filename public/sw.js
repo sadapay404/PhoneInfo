@@ -6,7 +6,9 @@
 //  - Background Sync / Periodic Background Sync: prefetch the latest catalog into the cache.
 const SHELL_CACHE = 'aetherphone-shell-v2';
 const CATALOG_CACHE = 'aetherphone-catalog-v1';
-const KEEP = new Set([SHELL_CACHE, CATALOG_CACHE]);
+const MODEL_CACHE = 'phoneinfo-models'; // background-removal model + ONNX Runtime wasm
+const CUTOUT_CACHE = 'phoneinfo-cutouts'; // processed thumbnail cut-outs
+const KEEP = new Set([SHELL_CACHE, CATALOG_CACHE, MODEL_CACHE, CUTOUT_CACHE]);
 const SHELL = ['/', '/index.html', '/manifest.webmanifest', '/icon.svg'];
 
 const scopeUrl = (path) => new URL(path, self.registration.scope).href;
@@ -93,6 +95,20 @@ self.addEventListener('fetch', (event) => {
           return res;
         })
         .catch(() => caches.match(scopeUrl('index.html'))),
+    );
+    return;
+  }
+
+  // Model and ONNX Runtime files: cache-first, so the cut-out feature works offline.
+  if (url.pathname.includes('/models/') || url.pathname.includes('/ort/')) {
+    event.respondWith(
+      caches.match(req).then((cached) =>
+        cached ||
+        fetch(req).then((res) => {
+          if (res.ok) caches.open(MODEL_CACHE).then((c) => c.put(req, res.clone()));
+          return res;
+        }),
+      ),
     );
     return;
   }

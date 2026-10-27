@@ -1,6 +1,6 @@
 import { useEffect, useState, type ButtonHTMLAttributes, type ReactNode } from 'react';
 import type { Device } from '../data/types';
-import { toTransparentPng } from '../lib/transparent';
+import { cutoutUrl } from '../lib/cutout';
 
 /* ---------- Icons: one stroke style, 24px grid ---------- */
 
@@ -89,15 +89,20 @@ export function imageSrc(image?: string): string | undefined {
   return image.startsWith('data:') ? image : `${import.meta.env.BASE_URL}catalog/${image}`;
 }
 
-/** An <img> whose background is made transparent (PNG). Shows the original until the PNG is ready. */
+/** Thumbnail <img>: shows the original photo at once, then swaps to the on-device cut-out when ready. */
 export function CleanImage({ src, alt, className = '' }: { src: string; alt: string; className?: string }) {
   const [out, setOut] = useState(src);
   useEffect(() => {
     let live = true;
+    let made: string | null = null;
     setOut(src);
-    toTransparentPng(src).then((r) => live && setOut(r));
+    cutoutUrl(src).then((u) => {
+      made = u;
+      if (live && u) setOut(u);
+    });
     return () => {
       live = false;
+      if (made) URL.revokeObjectURL(made);
     };
   }, [src]);
   return <img className={className} src={out} alt={alt} loading="lazy" decoding="async" />;
