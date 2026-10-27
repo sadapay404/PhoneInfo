@@ -5,5 +5,5 @@ dist/
 # Generated catalog (rebuilt by npm run build / dev)
 public/catalog/
 # Personal GSMArena archive: never commit (terms of use + repo visibility)
-data/
+/data/
 __pycache__/

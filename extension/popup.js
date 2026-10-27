@@ -13,7 +13,9 @@ function render(phones) {
   countEl.textContent = `${phones.length} saved`;
   listEl.innerHTML = '';
   if (!phones.length) {
-    listEl.innerHTML = '<li class="empty" style="display:block">Open any phone page on gsmarena.com and click “Save to AetherPhone”.</li>';
+    const li = document.createElement('li');
+    li.innerHTML = '<span class="empty">Open any phone page on gsmarena.com and click “Save to AetherPhone”.</span>';
+    listEl.append(li);
     return;
   }
   for (const p of phones) {
@@ -21,16 +23,16 @@ function render(phones) {
     const img = document.createElement('img');
     if (p.image) img.src = p.image; else img.className = 'ph';
     const label = document.createElement('div');
-    label.innerHTML = '';
     const strong = document.createElement('strong');
     strong.textContent = `${p.brand} ${p.model}`;
     const small = document.createElement('small');
-    small.textContent = `${p.year} · ${p.soc?.chipset ?? 'chipset —'}`;
+    const photos = p.gallery?.photo_count ?? 0;
+    small.textContent = `${p.year} · ${photos} photos${p.gallery?.has_3d ? ' · 3D view' : ''}`;
     label.append(strong, small);
     const del = document.createElement('button');
     del.textContent = 'Delete';
     del.addEventListener('click', async () => {
-      await chrome.storage.local.remove(`phone:${p.id}`);
+      await chrome.storage.local.remove([`phone:${p.id}`, `photos:${p.id}`]);
       refresh();
     });
     li.append(img, label, del);
@@ -42,20 +44,38 @@ async function refresh() {
   render(await loadPhones());
 }
 
+const EXT = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' };
+
 document.getElementById('export').addEventListener('click', async () => {
   const phones = await loadPhones();
-  const blob = new Blob([JSON.stringify(phones)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
+  const store = await chrome.storage.local.get(null);
+  const entries = [];
+  const out = [];
+  for (const p of phones) {
+    const { image, ...rest } = p; // the data URL goes into the ZIP as a file instead
+    const files = [];
+    for (const ph of store[`photos:${p.id}`] || []) {
+      const mime = ph.dataUrl.slice(5, ph.dataUrl.indexOf(';'));
+      const path = `photos/${p.id}/${ph.file}.${EXT[mime] || 'jpg'}`;
+      entries.push({ name: path, data: AetherZip.dataUrlToBytes(ph.dataUrl) });
+      files.push({ kind: ph.kind, file: path, source: ph.source });
+    }
+    const main = files.find((f) => f.kind === 'official') || files[0];
+    out.push({ ...rest, image: main ? main.file : undefined, photos: files });
+  }
+  entries.unshift({ name: 'aetherphone-saved.json', data: new TextEncoder().encode(JSON.stringify(out)) });
+  const zip = AetherZip.buildZip(entries);
+  const url = URL.createObjectURL(new Blob([zip], { type: 'application/zip' }));
   const a = document.createElement('a');
   a.href = url;
-  a.download = 'aetherphone-saved.json';
+  a.download = 'aetherphone-saved.zip';
   a.click();
-  setTimeout(() => URL.revokeObjectURL(url), 2000);
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
 });
 
 document.getElementById('clear').addEventListener('click', async () => {
-  if (!confirm('Delete all saved phones from the extension?')) return;
-  const keys = (await loadPhones()).map((p) => `phone:${p.id}`);
+  if (!confirm('Delete all saved phones and photos from the extension?')) return;
+  const keys = (await loadPhones()).flatMap((p) => [`phone:${p.id}`, `photos:${p.id}`]);
   await chrome.storage.local.remove(keys);
   refresh();
 });

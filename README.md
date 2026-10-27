@@ -102,16 +102,19 @@ The `extension/` folder is a Chrome/Edge extension. It runs entirely in your bro
 server and no data sent anywhere.
 
 1. Open a phone page on gsmarena.com (any page with a spec table).
-2. Click **Save to AetherPhone** (bottom right). The page is read, its photo is copied in,
-   and the phone is stored in the extension.
-3. Click the extension icon, then **Export JSON** to download `aetherphone-saved.json`.
-4. In the app, open **Tools → Saved phones** and **Import JSON**. Saved phones appear in
-   PhoneFinder and work offline on that device.
+2. Click **Save to AetherPhone** (bottom right). The page's specs, every official photo
+   (all angles and colours), and the review photos are copied into the extension. The 3D
+   model is not copied; the phone page links to GSMArena's 3D viewer instead.
+3. Click the extension icon, then **Export ZIP** to download `aetherphone-saved.zip`.
+4. In the app, open **Tools → Saved phones** and **Import ZIP**. Saved phones and their
+   photos appear in PhoneFinder and work offline on that device.
 
 Notes:
 - Saved data stays on your device. Do not publish it or commit it to git.
 - Browser storage is per site. Import in the same origin you run the app from (for
   example `localhost:3000`, not the Cloud Shell preview URL).
+- Photos are downloaded through the extension's background worker (the page itself
+  cannot fetch GSMArena's image host). Each phone can hold up to 80 photos.
 - The field mapping is written against the GSMArena table layout. Check a saved phone's
   **Full spec sheet** against the source page once, and report any mismatch.
 

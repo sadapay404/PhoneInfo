@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Device } from '../data/types';
-import { clearSavedPhones, deleteSavedPhone, importSavedPhones, loadSavedPhones, parseSavedFile, SAVED_CHANGED } from '../data/savedPhones';
+import { clearSavedPhones, deleteSavedPhone, importSavedFile, loadSavedPhones, SAVED_CHANGED } from '../data/savedPhones';
 import { DeviceImage } from './DeviceImage';
 import { Icon } from './Icon';
 
@@ -20,9 +20,8 @@ export function SavedPhones({ onOpen }: { onOpen: (id: string) => void }) {
   async function onFile(file: File | undefined) {
     if (!file) return;
     try {
-      const devices = parseSavedFile(await file.text());
-      const n = await importSavedPhones(devices);
-      setMessage({ kind: 'ok', text: `Imported ${n} phone${n === 1 ? '' : 's'}. They are saved on this device.` });
+      const n = await importSavedFile(file);
+      setMessage({ kind: 'ok', text: `Imported ${n} phone${n === 1 ? '' : 's'} with their photos. They are saved on this device.` });
     } catch (e) {
       setMessage({ kind: 'error', text: `Import failed: ${e instanceof Error ? e.message : 'unknown error'}` });
     }
@@ -36,12 +35,12 @@ export function SavedPhones({ onOpen }: { onOpen: (id: string) => void }) {
           <strong>Saved phones on this device</strong>
           <p className="muted small">
             Save phones with the AetherPhone Saver browser extension while you browse GSMArena,
-            then export and import the file here. Everything stays on your device.
+            export the ZIP, and import it here. Photos and specs stay on this device.
           </p>
         </div>
         <div className="saved-actions">
           <button className="btn" onClick={() => fileRef.current?.click()}><Icon name="plus" size={16} /> Import JSON</button>
-          <input ref={fileRef} type="file" accept="application/json,.json" hidden onChange={(e) => void onFile(e.target.files?.[0])} />
+          <input ref={fileRef} type="file" accept=".zip,application/zip,.json,application/json" hidden onChange={(e) => void onFile(e.target.files?.[0])} />
           {phones.length > 0 && <button className="btn-outline" onClick={() => void clearSavedPhones()}>Delete all</button>}
         </div>
       </div>

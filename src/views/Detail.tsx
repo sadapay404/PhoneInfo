@@ -1,4 +1,6 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { loadPhotos } from '../data/savedPhones';
+import type { SavedPhoto } from '../data/db';
 import type { Device } from '../data/types';
 import { CATEGORIES, SPEC_FIELDS, formatValue, getPath } from '../data/specs';
 import { compareDevices } from '../lib/compare';
@@ -26,6 +28,15 @@ export function Detail({ device, all, inCompare, onBack, onToggleCompare }: {
   onToggleCompare: () => void;
 }) {
   const leads = useLeads(all, device.id);
+  const [photos, setPhotos] = useState<SavedPhoto[]>([]);
+  const [lightbox, setLightbox] = useState<number | null>(null);
+  useEffect(() => {
+    let live = true;
+    void loadPhotos(device.id).then((p) => live && setPhotos(p)).catch(() => live && setPhotos([]));
+    return () => {
+      live = false;
+    };
+  }, [device.id]);
   const unknown = SPEC_FIELDS.filter((f) => getPath(device, f.path) === undefined).length;
 
   return (
@@ -98,6 +109,42 @@ export function Detail({ device, all, inCompare, onBack, onToggleCompare }: {
               </div>
             ))}
           </div>
+        </section>
+      )}
+
+      {(photos.length > 0 || device.gallery?.has_3d) && (
+        <section className="gallery">
+          <div className="gallery-head">
+            <h2>Photos {photos.length > 0 && <span className="muted small">({photos.length})</span>}</h2>
+            {device.gallery?.has_3d && device.gallery.pictures_url && (
+              <a className="btn-outline" href={device.gallery.pictures_url} target="_blank" rel="noopener noreferrer">
+                <Icon name="plus" size={16} /> View 3D model on GSMArena
+              </a>
+            )}
+          </div>
+          {photos.length > 0 ? (
+            <div className="gallery-grid">
+              {photos.map((p, i) => (
+                <button key={p.id} className="gallery-item" onClick={() => setLightbox(i)} aria-label={`Open photo ${i + 1}`}>
+                  <img src={p.dataUrl} alt={`${device.brand} ${device.model} photo ${i + 1}`} loading="lazy" />
+                  {p.kind === 'review' && <span className="gallery-tag">Our photo</span>}
+                </button>
+              ))}
+            </div>
+          ) : (
+            <p className="muted small">The 3D model is shown by GSMArena and needs an internet connection.</p>
+          )}
+          {lightbox !== null && photos[lightbox] && (
+            <div className="lightbox" role="dialog" aria-modal="true" onClick={() => setLightbox(null)}>
+              <img src={photos[lightbox].dataUrl} alt="" onClick={(e) => e.stopPropagation()} />
+              <div className="lightbox-bar" onClick={(e) => e.stopPropagation()}>
+                <button className="btn-outline" onClick={() => setLightbox((lightbox - 1 + photos.length) % photos.length)}>Previous</button>
+                <span>{lightbox + 1} / {photos.length}</span>
+                <button className="btn-outline" onClick={() => setLightbox((lightbox + 1) % photos.length)}>Next</button>
+                <button className="btn" onClick={() => setLightbox(null)}>Close</button>
+              </div>
+            </div>
+          )}
         </section>
       )}
     </div>

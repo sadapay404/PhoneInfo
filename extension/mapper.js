@@ -75,19 +75,25 @@
       : /Apple/i.test(chipset) || /^A\d+/.test(chipset) ? 'Apple'
       : undefined;
 
+    // GSMArena packs every lens of a camera into one row, e.g.
+    // "50 MP, f/1.8, 24mm (wide) ... 50 MP, f/2.8, 80mm (periscope telephoto) ...".
+    // Split before each "NN MP" and classify each lens by its own text.
     const camera = {};
     for (const [label, value] of Object.entries(raw.specs['Main Camera'] || {})) {
-      const text = `${label} ${value}`;
-      const kind = /ultra/i.test(text) ? 'ultrawide' : /tele/i.test(text) ? 'telephoto' : 'main';
-      if (camera[kind]) continue;
-      const lens = {
-        mp: num(first(value, /(\d+(?:\.\d+)?)\s*MP/)),
-        aperture: first(value, /(f\/\d+(?:\.\d+)?)/),
-        focal_mm: num(first(value, /(\d+(?:\.\d+)?)\s*mm/)),
-      };
-      if (kind === 'telephoto') lens.zoom_x = num(first(value, /(\d+(?:\.\d+)?)x\s*optical/i));
-      if (/sensor[- ]shift/i.test(value)) lens.ois = 'sensor-shift';
-      camera[kind] = Object.fromEntries(Object.entries(lens).filter(([, v]) => v !== undefined));
+      if (/^(features|video)$/i.test(label)) continue;
+      const lenses = String(value).split(/(?=\b\d+(?:\.\d+)?\s*MP\b)/).map((x) => x.trim()).filter((x) => /MP\b/.test(x));
+      for (const text of lenses) {
+        const kind = /ultra/i.test(text) ? 'ultrawide' : /tele/i.test(text) ? 'telephoto' : 'main';
+        if (camera[kind]) continue;
+        const lens = {
+          mp: num(first(text, /(\d+(?:\.\d+)?)\s*MP/)),
+          aperture: first(text, /(f\/\d+(?:\.\d+)?)/),
+          focal_mm: num(first(text, /(\d+(?:\.\d+)?)\s*mm/)),
+        };
+        if (kind === 'telephoto') lens.zoom_x = num(first(text, /(\d+(?:\.\d+)?)x\s*optical/i));
+        if (/sensor[- ]shift/i.test(text)) lens.ois = 'sensor-shift';
+        camera[kind] = Object.fromEntries(Object.entries(lens).filter(([, v]) => v !== undefined));
+      }
     }
     const selfie = cat('Selfie camera');
     if (selfie) {
@@ -171,6 +177,7 @@
       },
       source_url: raw.url,
       image: opts.imageDataUrl || undefined,
+      gallery: opts.gallery || undefined,
       source_note: `Saved from GSMArena for personal offline use on ${(opts.savedOn || new Date().toISOString()).slice(0, 10)}`,
       raw_specs: raw.specs,
     };
