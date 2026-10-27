@@ -2,7 +2,16 @@ import { describe, expect, it } from 'vitest';
 import { estimateEndurance, parseOpticalFormat, pointsPer100Usd, sensorGeometry } from './estimators';
 import { compareDevices, winnersFor } from './compare';
 import { SPEC_FIELDS } from '../data/specs';
-import { SEED_DEVICES as DEVICES } from '../data/seed';
+import { parseSavedJson } from '../data/savedPhones';
+import type { Device } from '../data/types';
+
+// Synthetic fixtures (not the sample catalog): only the fields these tests read.
+const DEVICES = parseSavedJson(JSON.stringify([
+  { id: 'apple-iphone-15-pro', brand: 'Apple', model: 'iPhone 15 Pro', year: 2023, battery: { capacity_mah: 3274, wired_w: 27 }, soc: { chipset: 'Apple A17 Pro', ram_gb: 8 }, display: { peak_nits: 2000, refresh_hz_max: 120, panel_tech: 'OLED' } },
+  { id: 'samsung-galaxy-s24-ultra', brand: 'Samsung', model: 'Galaxy S24 Ultra', year: 2024, battery: { capacity_mah: 5000, wired_w: 45 }, soc: { chipset: 'Snapdragon 8 Gen 3', ram_gb: 12 }, display: { peak_nits: 2600, refresh_hz_max: 120, panel_tech: 'OLED' } },
+  { id: 'google-pixel-8-pro', brand: 'Google', model: 'Pixel 8 Pro', year: 2023, battery: { capacity_mah: 5050, wired_w: 30 }, soc: { chipset: 'Google Tensor G3', ram_gb: 12 }, display: { peak_nits: 2400, refresh_hz_max: 120, panel_tech: 'OLED' } },
+  { id: 'oneplus-12', brand: 'OnePlus', model: '12', year: 2024, battery: { capacity_mah: 5400, wired_w: 100 }, soc: { chipset: 'Snapdragon 8 Gen 3', ram_gb: 12 }, display: { peak_nits: 2600, refresh_hz_max: 120, panel_tech: 'OLED' } },
+])) as Device[];
 import { createDeviceSearch } from './search';
 
 const base = { screenOnHours: 5, brightness: 0.5, refreshHz: 120, load: 0.4 };

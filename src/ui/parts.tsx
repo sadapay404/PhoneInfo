@@ -103,10 +103,19 @@ export function CleanImage({ src, alt, className = '' }: { src: string; alt: str
   return <img className={className} src={out} alt={alt} loading="lazy" decoding="async" />;
 }
 
-export function Photo({ device, src, className = '' }: { device: Device; src?: string; className?: string }) {
+/**
+ * Phone image for a card or header. Thumbnails (`thumb`, default) get the transparent
+ * cut-out. Large views pass `thumb={false}` and show the original photo.
+ */
+export function Photo({ device, src, className = '', thumb = true }: { device: Device; src?: string; className?: string; thumb?: boolean }) {
   const url = src ?? imageSrc(device.image);
   if (url) {
-    return <CleanImage src={url} alt={`${device.brand} ${device.model}`} className={`photo ${className}`} />;
+    const alt = `${device.brand} ${device.model}`;
+    return thumb ? (
+      <CleanImage src={url} alt={alt} className={`photo ${className}`} />
+    ) : (
+      <img className={`photo ${className}`} src={url} alt={alt} loading="lazy" decoding="async" />
+    );
   }
   return (
     <div className={`photo photo-empty ${className}`} aria-label={`${device.brand} ${device.model}`} role="img">

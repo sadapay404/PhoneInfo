@@ -7,6 +7,12 @@ const num = (suffix = '') => (v: unknown) => (typeof v === 'number' ? `${v}${suf
  * Single source of truth for every displayable/comparable spec.
  * Detail cards, the compare matrix, and winner logic all read from here.
  */
+/** Only the IP code (e.g. IP68). Longer text from the source page belongs in Extra features. */
+export function ipCode(value: unknown): string {
+  const m = /IP\s?\d[\dX]?/i.exec(String(value));
+  return m ? m[0].replace(/\s/g, '').toUpperCase() : String(value);
+}
+
 export const SPEC_FIELDS: SpecField[] = [
   // Display
   { path: 'display.type', label: 'Panel', category: 'Display' },
@@ -73,7 +79,7 @@ export const SPEC_FIELDS: SpecField[] = [
   { path: 'year', label: 'Launch year', category: 'Body & SAR', better: 'higher' },
   { path: 'body.weight_g', label: 'Weight', category: 'Body & SAR', unit: 'g', better: 'lower', format: num(' g') },
   { path: 'body.dimensions_mm', label: 'Dimensions', category: 'Body & SAR', format: (v) => (Array.isArray(v) ? v.join(' × ') + ' mm' : '—') },
-  { path: 'body.ip_rating', label: 'Ingress rating', category: 'Body & SAR' },
+  { path: 'body.ip_rating', label: 'Ingress rating', category: 'Body & SAR', format: ipCode },
   { path: 'body.stylus', label: 'Stylus', category: 'Body & SAR', format: yesNo },
   { path: 'repair.sar_head_eu_wkg', label: 'SAR head (EU)', category: 'Body & SAR', unit: 'W/kg', better: 'lower', format: num(' W/kg') },
   { path: 'repair.sar_body_eu_wkg', label: 'SAR body (EU)', category: 'Body & SAR', unit: 'W/kg', better: 'lower', format: num(' W/kg') },

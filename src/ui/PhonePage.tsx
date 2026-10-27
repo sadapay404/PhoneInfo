@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { Device } from '../data/types';
-import { CATEGORIES, SPEC_FIELDS, formatValue, getPath } from '../data/specs';
+import { CATEGORIES, SPEC_FIELDS, formatValue, getPath, ipCode } from '../data/specs';
 import { loadPhotos } from '../data/savedPhones';
+import { extrasFor, groupExtras } from '../data/extras';
 import type { SavedPhoto } from '../data/db';
 import { addPrice, formatPkr, isOld, latestByVariant, pricesFor, variantKey, variantLabel, variantsFor, type Variant } from '../data/prices';
 import type { PriceEntry } from '../data/db';
-import { Button, CleanImage, Empty, Icon, Photo, Stat, imageSrc } from './parts';
+import { Button, Empty, Icon, Photo, Stat, imageSrc } from './parts';
 import { MAX_COMPARE, navigate, useCompareIds } from './state';
 
 function hasValue(v: unknown): boolean {
@@ -51,7 +52,7 @@ function Detail({ device: d }: { device: Device }) {
     d.battery.capacity_mah ? { label: 'Battery', value: `${d.battery.capacity_mah.toLocaleString()} mAh`, sub: d.battery.wired_w ? `${d.battery.wired_w} W charging` : undefined } : null,
     d.camera.main?.mp ? { label: 'Main camera', value: `${d.camera.main.mp} MP`, sub: d.camera.main.sensor_model } : null,
     d.soc.chipset ? { label: 'Chip', value: d.soc.chipset, sub: d.soc.ram_options_gb?.length ? `RAM ${d.soc.ram_options_gb.join(' / ')} GB` : undefined } : null,
-    d.body.weight_g ? { label: 'Weight', value: `${d.body.weight_g} g`, sub: d.body.ip_rating } : null,
+    d.body.weight_g ? { label: 'Weight', value: `${d.body.weight_g} g`, sub: d.body.ip_rating ? ipCode(d.body.ip_rating) : undefined } : null,
   ];
   const stats = statItems.flatMap((s) => (s ? [s] : []));
 
@@ -63,7 +64,7 @@ function Detail({ device: d }: { device: Device }) {
 
       <section className="hero">
         <div className="hero-media">
-          <Photo device={d} src={gallery[0]?.src} className="hero-photo" />
+          <Photo device={d} src={gallery[0]?.src} className="hero-photo" thumb={false} />
         </div>
         <div className="hero-body">
           <span className="eyebrow">
@@ -128,6 +129,8 @@ function Detail({ device: d }: { device: Device }) {
 
       <SpecSheet device={d} />
 
+      <ExtraSection device={d} />
+
       {d.raw_specs && Object.keys(d.raw_specs).length > 0 && (
         <section className="block">
           <h2>Full spec sheet</h2>
@@ -148,6 +151,33 @@ function Detail({ device: d }: { device: Device }) {
         </section>
       )}
     </article>
+  );
+}
+
+/** Features that are not in the main spec table (stylus, gaming triggers, coatings, build...). */
+function ExtraSection({ device: d }: { device: Device }) {
+  const groups = groupExtras(extrasFor(d));
+  if (groups.length === 0) return null;
+  return (
+    <section className="block">
+      <h2>Extra features</h2>
+      <p className="muted">Details that are specific to this phone and not in the main table.</p>
+      <div className="spec-grid">
+        {groups.map((g) => (
+          <div className="spec-card" key={g.category}>
+            <h3>{g.category}</h3>
+            <dl className="kv">
+              {g.rows.map((r, i) => (
+                <div key={`${r.label}-${i}`}>
+                  <dt>{r.label}</dt>
+                  <dd>{r.value}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+        ))}
+      </div>
+    </section>
   );
 }
 
@@ -211,7 +241,7 @@ function Gallery({ items, name }: { items: { src: string; kind: string }[]; name
         {items.map((it, i) => (
           <li key={i}>
             <button type="button" className="gallery-thumb" onClick={() => setOpen(i)} aria-label={`Open photo ${i + 1} of ${items.length}`}>
-              <CleanImage src={it.src} alt={`${name} photo ${i + 1}`} />
+              <img src={it.src} alt={`${name} photo ${i + 1}`} loading="lazy" decoding="async" />
             </button>
           </li>
         ))}
@@ -219,7 +249,7 @@ function Gallery({ items, name }: { items: { src: string; kind: string }[]; name
 
       {open !== null && (
         <div className="lightbox" role="dialog" aria-modal="true" aria-label="Photo viewer" onClick={() => setOpen(null)}>
-          <CleanImage src={items[open].src} alt={`${name} photo ${open + 1}`} className="lightbox-img" />
+          <img src={items[open].src} alt={`${name} photo ${open + 1}`} />
           <div className="lightbox-bar" onClick={(e) => e.stopPropagation()}>
             <Button variant="quiet" small onClick={() => setOpen((open - 1 + items.length) % items.length)} aria-label="Previous photo">
               <Icon name="back" size={18} />

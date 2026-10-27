@@ -129,6 +129,7 @@
         weight_g: num(first(cell('Body', 'Weight'), /(\d+(?:\.\d+)?)\s*g\b/)),
         dimensions_mm: dimsM ? [Number(dimsM[1]), Number(dimsM[2]), Number(dimsM[3])] : undefined,
         ip_rating: ip ? `IP${ip}` : undefined,
+        stylus: /stylus|s[\s-]?pen/i.test(`${body} ${features} ${Object.keys(raw.specs.Body || {}).join(' ')}`) || undefined,
       },
       display: {
         type: displayType || undefined,

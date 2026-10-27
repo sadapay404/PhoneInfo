@@ -22,8 +22,12 @@ a filter sheet. There is no phone frame.
 - **Phones** (`#/phones`): search, quick picks, filters (brand, year, screen, refresh, RAM,
   storage, battery, charging, camera, OS, must-have features) and sorting. Filters live in the
   URL, so a filtered view can be bookmarked.
-- **Phone page** (`#/phone/<id>`): photos, key numbers, the full spec sheet, and PKR prices per
-  RAM and storage variant (with a 30-day "check again" flag).
+- **Phone page** (`#/phone/<id>`): photos (originals in the gallery), key numbers, the spec table,
+  **Extra features** (stylus, gaming triggers, coatings, build, and anything else the source sheet
+  lists that the table does not), the full spec sheet, and PKR prices per RAM and storage variant
+  (with a 30-day "check again" flag).
+- Phone cards show a **transparent cut-out** of the photo (studio background removed with a soft
+  edge). Only thumbnails use it; the hero and gallery show the original.
 - **Compare** (`#/compare`): up to four phones, with a winner marked on each row and a
   differences-only filter.
 - **Library** (`#/library`): add your AetherPhone ZIP (choose or drop). Phones, photos and PKR
