@@ -152,3 +152,17 @@ visible page text, which may change without notice.
 
 Install: open `chrome://extensions`, turn on Developer mode, click **Load unpacked**, and
 choose the `extension` folder. Run its tests with `for f in extension/test/*.mjs; do node --test "$f"; done` (run `npm ci` first, so `jsdom` is installed).
+
+## Android APK (automatic build)
+
+The Android app is the same web app wrapped with Capacitor (`capacitor.config.json`,
+`android/`). `.github/workflows/android-apk.yml` builds a debug APK on GitHub Actions on every
+push to an `arena/` branch or `main`, and on demand. Download it from the workflow run's
+**Artifacts** list (`aetherphone-debug-apk`, kept 14 days).
+
+Limits:
+- The repository is public, and workflow artifacts can be downloaded by anyone with a GitHub
+  account. The CI build therefore uses only the sample catalog in `catalog/devices.json`. Build
+  the full catalog locally (for example in Cloud Shell) and keep that APK private.
+- The APK is debug-signed. To install it, allow installs from unknown sources on the phone.
+  A release build needs a signing key, which is not set up.
