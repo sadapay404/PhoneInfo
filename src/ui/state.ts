@@ -21,11 +21,30 @@ export function parseRoute(hash: string): Route {
   return { page: 'phones', id: null, query };
 }
 
+/** How many in-app entries are behind the current screen (pushed by navigate, popped by back). */
+export let historyDepth = 0;
+/** True when the current screen was reached with the browser/Android back button. */
+let arrivedByBack = false;
+export function wasArrivedByBack(): boolean {
+  return arrivedByBack;
+}
+if (typeof window !== 'undefined') {
+  window.addEventListener('popstate', () => {
+    historyDepth = Math.max(0, historyDepth - 1);
+    arrivedByBack = true;
+  });
+}
+
 /** Navigate. Uses replaceState so typing in a search box does not fill the back button. */
 export function navigate(path: string, replace = false) {
   const url = `${window.location.pathname}${window.location.search}#/${path}`;
-  if (replace) window.history.replaceState(null, '', url);
-  else window.location.hash = `/${path}`;
+  arrivedByBack = false;
+  if (replace) {
+    window.history.replaceState(null, '', url);
+  } else {
+    window.location.hash = `/${path}`;
+    historyDepth++;
+  }
   window.dispatchEvent(new Event(ROUTE_EVENT));
 }
 

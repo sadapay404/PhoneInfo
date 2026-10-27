@@ -29,7 +29,10 @@ a filter sheet. There is no phone frame.
 - Phone cards show a **transparent cut-out** of the photo. The background is removed on the
   device by the ISNet model (MIT) running in a Web Worker with ONNX Runtime Web. Results are
   cached, so each photo is processed once and then works offline. Only thumbnails use it; the
-  hero and gallery show the original. The first load downloads the ~88 MB model.
+  hero and gallery show the original. The first load downloads the ~88 MB model. Cards are
+  processed when they scroll into view, and a placeholder shows until the cut-out is ready.
+- **Android back button**: goes back one screen inside the app. On the first screen, press it
+  twice within 2 seconds to close the app.
 - **Compare** (`#/compare`): up to four phones, with a winner marked on each row and a
   differences-only filter.
 - **Library** (`#/library`): add your AetherPhone ZIP (choose or drop). Phones, photos and PKR

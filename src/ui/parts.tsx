@@ -1,4 +1,4 @@
-import { useEffect, useState, type ButtonHTMLAttributes, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ButtonHTMLAttributes, type ReactNode } from 'react';
 import type { Device } from '../data/types';
 import { cutoutUrl } from '../lib/cutout';
 
@@ -89,23 +89,62 @@ export function imageSrc(image?: string): string | undefined {
   return image.startsWith('data:') ? image : `${import.meta.env.BASE_URL}catalog/${image}`;
 }
 
-/** Thumbnail <img>: shows the original photo at once, then swaps to the on-device cut-out when ready. */
+/**
+ * Thumbnail: a clean cut-out with the studio background removed. Processing starts only when the
+ * card is on screen (visible cards go first). While it is pending, a neutral placeholder shows,
+ * never the photo with its background. The original photo appears only if the engine cannot run.
+ */
 export function CleanImage({ src, alt, className = '' }: { src: string; alt: string; className?: string }) {
-  const [out, setOut] = useState(src);
+  const ref = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
+  const [out, setOut] = useState<string | null>(null);
+  const [failed, setFailed] = useState(false);
+
   useEffect(() => {
+    const el = ref.current;
+    if (!el || visible) return;
+    if (typeof IntersectionObserver === 'undefined') {
+      setVisible(true);
+      return;
+    }
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          setVisible(true);
+          io.disconnect();
+        }
+      },
+      { rootMargin: '300px' },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [visible]);
+
+  useEffect(() => {
+    if (!visible) return;
     let live = true;
     let made: string | null = null;
-    setOut(src);
     cutoutUrl(src).then((u) => {
-      made = u;
-      if (live && u) setOut(u);
+      if (!live) {
+        if (u) URL.revokeObjectURL(u);
+        return;
+      }
+      if (u) {
+        made = u;
+        setOut(u);
+      } else {
+        setFailed(true);
+      }
     });
     return () => {
       live = false;
       if (made) URL.revokeObjectURL(made);
     };
-  }, [src]);
-  return <img className={className} src={out} alt={alt} loading="lazy" decoding="async" />;
+  }, [src, visible]);
+
+  if (out) return <img className={`photo ${className}`} src={out} alt={alt} decoding="async" />;
+  if (failed) return <img className={`photo ${className}`} src={src} alt={alt} loading="lazy" decoding="async" />;
+  return <div ref={ref} className={`photo photo-empty photo-pending ${className}`} role="img" aria-label={alt} />;
 }
 
 /**

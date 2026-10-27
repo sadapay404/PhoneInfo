@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { App } from './App';
+import { initNativeBack } from './lib/nativeBack';
 import './styles.css';
 
 // Background Sync types are not in TypeScript's DOM lib yet.
@@ -8,6 +9,8 @@ interface BackgroundSyncRegistration {
   sync?: { register(tag: string): Promise<void> };
   periodicSync?: { register(tag: string, options: { minInterval: number }): Promise<void> };
 }
+
+initNativeBack();
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

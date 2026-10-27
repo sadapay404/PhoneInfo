@@ -1036,3 +1036,30 @@ input[type='checkbox'] { accent-color: var(--accent); width: 16px; height: 16px;
     scroll-behavior: auto !important;
   }
 }
+
+/* Android back-button hint */
+.back-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 84px;
+  transform: translateX(-50%);
+  z-index: 100;
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: var(--text);
+  color: var(--bg);
+  font-size: 0.9rem;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+  pointer-events: none;
+}
+
+/* Thumbnail waiting for its on-device cut-out */
+.photo-pending {
+  background: linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, 0.4) 50%, transparent 70%), var(--card-soft, rgba(127, 127, 127, 0.12));
+  background-size: 200% 100%, auto;
+  animation: photo-pending 1.4s linear infinite;
+}
+@keyframes photo-pending {
+  from { background-position: 200% 0, 0 0; }
+  to { background-position: -200% 0, 0 0; }
+}
