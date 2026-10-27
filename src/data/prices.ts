@@ -68,3 +68,44 @@ export function latestByVariant(rows: PriceEntry[]): Map<string, PriceEntry> {
   }
   return out;
 }
+
+/**
+ * Reads the price list from an extension export (aetherphone-prices.json). Rows that are
+ * not valid prices are rejected, not guessed. Returns entries ready to store.
+ */
+export function parsePriceExport(text: string): Omit<PriceEntry, 'id'>[] {
+  const data: unknown = JSON.parse(text);
+  if (!Array.isArray(data)) throw new Error('Price file must be a JSON array');
+  return data.map((item) => {
+    const r = item as Partial<PriceEntry>;
+    if (typeof r.deviceId !== 'string' || typeof r.price_pkr !== 'number' || typeof r.observed_on !== 'string') {
+      throw new Error('Some price rows are missing deviceId, price_pkr or observed_on');
+    }
+    if (!Number.isInteger(r.price_pkr) || r.price_pkr < 1 || r.price_pkr > 100_000_000) {
+      throw new Error(`Invalid price for ${r.deviceId}`);
+    }
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(r.observed_on)) throw new Error(`Invalid date for ${r.deviceId}`);
+    return {
+      deviceId: r.deviceId,
+      price_pkr: r.price_pkr,
+      observed_on: r.observed_on,
+      ram_gb: typeof r.ram_gb === 'number' ? r.ram_gb : undefined,
+      storage_gb: typeof r.storage_gb === 'number' ? r.storage_gb : undefined,
+      shop: typeof r.shop === 'string' ? r.shop : undefined,
+      note: typeof r.note === 'string' ? r.note : undefined,
+    };
+  });
+}
+
+/**
+ * Replaces the price history of each phone in the file with the file's rows. The export
+ * holds the full history, so this keeps the app in step without duplicating entries.
+ */
+export async function replacePriceHistory(rows: Omit<PriceEntry, 'id'>[]): Promise<number> {
+  const ids = [...new Set(rows.map((r) => r.deviceId))];
+  await db.transaction('rw', db.prices, async () => {
+    for (const id of ids) await db.prices.where('deviceId').equals(id).delete();
+    await db.prices.bulkAdd(rows as PriceEntry[]);
+  });
+  return rows.length;
+}

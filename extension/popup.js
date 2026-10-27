@@ -32,7 +32,7 @@ function render(phones) {
     const del = document.createElement('button');
     del.textContent = 'Delete';
     del.addEventListener('click', async () => {
-      await chrome.storage.local.remove([`phone:${p.id}`, `photos:${p.id}`]);
+      await chrome.storage.local.remove([`phone:${p.id}`, `photos:${p.id}`, `prices:${p.id}`]);
       refresh();
     });
     li.append(img, label, del);
@@ -64,7 +64,11 @@ document.getElementById('export').addEventListener('click', async () => {
     const main = files.find((f) => f.kind === 'official') || files[0];
     out.push({ ...rest, image: main ? main.file : undefined, photos: files });
   });
+  // Price log (typed by you on PriceOye, or as entered in the app). One flat list, with the device id on each row.
+  const prices = [];
+  for (const p of phones) prices.push(...(store[`prices:${p.id}`] || []));
   entries.unshift({ name: 'aetherphone-saved.json', data: new TextEncoder().encode(JSON.stringify(out)) });
+  if (prices.length) entries.push({ name: 'aetherphone-prices.json', data: new TextEncoder().encode(JSON.stringify(prices)) });
   const zip = AetherZip.buildZip(entries);
   const url = URL.createObjectURL(new Blob([zip], { type: 'application/zip' }));
   const a = document.createElement('a');
@@ -76,7 +80,7 @@ document.getElementById('export').addEventListener('click', async () => {
 
 document.getElementById('clear').addEventListener('click', async () => {
   if (!confirm('Delete all saved phones and photos from the extension?')) return;
-  const keys = (await loadPhones()).flatMap((p) => [`phone:${p.id}`, `photos:${p.id}`]);
+  const keys = (await loadPhones()).flatMap((p) => [`phone:${p.id}`, `photos:${p.id}`, `prices:${p.id}`]);
   await chrome.storage.local.remove(keys);
   refresh();
 });

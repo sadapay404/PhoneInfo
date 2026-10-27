@@ -1,19 +1,40 @@
 {
   "manifest_version": 3,
   "name": "AetherPhone Saver",
-  "version": "0.3.0",
-  "description": "Save a GSMArena phone page and its photos to your own AetherPhone library, for personal offline use.",
-  "permissions": ["storage", "unlimitedStorage"],
+  "version": "0.4.0",
+  "description": "Save GSMArena phones and photos, and log PKR prices you see on PriceOye, to your own AetherPhone library. Personal use.",
+  "permissions": [
+    "storage",
+    "unlimitedStorage"
+  ],
   "host_permissions": [
     "https://www.gsmarena.com/*",
     "https://fdn.gsmarena.com/*",
     "https://fdn2.gsmarena.com/*"
   ],
-  "background": { "service_worker": "background.js" },
+  "background": {
+    "service_worker": "background.js"
+  },
   "content_scripts": [
     {
-      "matches": ["https://www.gsmarena.com/*"],
-      "js": ["extract.js", "mapper.js", "content.js"],
+      "matches": [
+        "https://www.gsmarena.com/*"
+      ],
+      "js": [
+        "extract.js",
+        "mapper.js",
+        "content.js"
+      ],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://priceoye.pk/*"
+      ],
+      "js": [
+        "prices-core.js",
+        "priceoye.js"
+      ],
       "run_at": "document_idle"
     }
   ],

@@ -121,5 +121,13 @@ Notes:
 - The field mapping is written against the GSMArena table layout. Check a saved phone's
   **Full spec sheet** against the source page once, and report any mismatch.
 
+**PKR prices (version 0.4.0).** On a PriceOye page, click **AetherPhone · PKR prices**
+(bottom left). Pick a saved phone. Its RAM/storage variants are listed from the GSMArena data
+you saved, and you type each price you see on the page, with the shop and date. The panel
+does not read anything from the PriceOye page. Prices are kept in the extension, exported in
+`aetherphone-prices.json` with the ZIP, and imported into the app's price log. Check
+PriceOye's terms before you use this. Their Terms restrict collecting prices and using data
+extraction tools, and this panel is a manual entry aid, not an extractor.
+
 Install: open `chrome://extensions`, turn on Developer mode, click **Load unpacked**, and
-choose the `extension` folder. Run its tests with `node --test extension/test/extension.check.mjs`.
+choose the `extension` folder. Run its tests with `for f in extension/test/*.mjs; do node --test "$f"; done`.

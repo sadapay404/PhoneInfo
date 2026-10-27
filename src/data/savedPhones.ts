@@ -1,6 +1,7 @@
 import JSZip from 'jszip';
 import type { Device } from './types';
 import { db, type SavedPhoto } from './db';
+import { parsePriceExport, replacePriceHistory } from './prices';
 
 /** Fired on window after saved phones change, so the catalog hook can reload. */
 export const SAVED_CHANGED = 'aether:saved-changed';
@@ -86,6 +87,8 @@ export async function importSavedFile(file: File): Promise<number> {
     for (const d of cleaned) await db.photos.where('deviceId').equals(d.id).delete();
     await db.photos.bulkPut(photos);
   });
+  const priceFile = zip.file('aetherphone-prices.json');
+  if (priceFile) await replacePriceHistory(parsePriceExport(await priceFile.async('string')));
   notify();
   return cleaned.length;
 }
