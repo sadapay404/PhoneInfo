@@ -1,0 +1,6 @@
+{
+  "appId": "app.aetherphone.phonefinder",
+  "appName": "AetherPhone",
+  "webDir": "dist",
+  "server": { "androidScheme": "https" }
+}
