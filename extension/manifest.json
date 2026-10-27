@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "AetherPhone Saver",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "Save GSMArena phones, photos and 3D viewer images, and log PKR prices from PriceOye, to your own AetherPhone library. Personal use.",
   "permissions": [
     "storage",

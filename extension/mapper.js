@@ -167,7 +167,8 @@
       },
       battery: {
         capacity_mah: num(first(battery, /(\d{3,5})\s*mAh/)),
-        chemistry: first(battery, /(Li-?(?:Po|Ion))/i),
+        // Keep the full name, e.g. "Si/C Li-Ion" (silicon-carbon anode), not just "Li-Ion".
+        chemistry: first(battery, /((?:Si\/C|Si\/Gr|Silicon[- ]carbon)?\s*Li-?(?:Po|Ion)(?:\s*Polymer)?)/i)?.trim(),
         wired_w: wiredWatts(charging),
         wireless_w: num(first(charging, /(\d+)\s*W\s*wireless/i)),
         reverse_w: num(first(charging, /(\d+)\s*W\s*reverse/i)),
